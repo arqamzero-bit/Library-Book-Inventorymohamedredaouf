@@ -26,7 +26,13 @@
         .btn-danger:hover { background: #dc2626; }
         .btn-outline { background: transparent; border: 2px solid #cbd5e1; color: #334155; }
         .btn-outline:hover { background: #f1f5f9; }
+        .btn-sm-danger { background: #fee2e2; color: #dc2626; padding: 4px 8px; border-radius: 6px; border: none; cursor: pointer; font-size: 12px; font-weight: bold; }
+        .btn-sm-danger:hover { background: #ef4444; color: white; }
+        
         .flex { display: flex; gap: 10px; flex-wrap: wrap; margin: 15px 0; align-items: center; }
+        .search-box { display: flex; align-items: center; background: #f8fafc; border: 1.5px solid #cbd5e1; border-radius: 50px; padding: 6px 15px; margin-bottom: 10px; width: 100%; max-width: 400px; }
+        .search-box input { border: none; background: transparent; outline: none; font-family: 'Tajawal', sans-serif; font-size: 13.5px; width: 100%; margin-right: 8px; }
+        
         .table-wrapper { overflow-x: auto; margin: 15px 0; border-radius: 12px; border: 1px solid #e2e8f0; max-height: 500px; }
         table { width: 100%; border-collapse: collapse; font-size: 13px; white-space: nowrap; }
         th { background: #1e3a8a; color: white; font-weight: 700; padding: 12px 10px; text-align: right; border-bottom: 2px solid #cbd5e1; position: sticky; top: 0; z-index: 10; }
@@ -63,7 +69,13 @@
         <span style="font-size:14px; color:#1e293b; font-weight:bold;" id="recordCount">إجمالي الكتب: 0</span>
     </div>
 
-    <div class="section-tag">المعاينة الفورية: الكتب المحفوظة بالسجل</div>
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-top: 20px;">
+        <div class="section-tag">المعاينة الفورية: الكتب المحفوظة بالسجل</div>
+        <div class="search-box">
+            🔍 <input type="text" id="searchInput" placeholder="ابحث باسم الكتاب أو المؤلف...">
+        </div>
+    </div>
+
     <div class="table-wrapper">
         <table>
             <thead>
@@ -80,10 +92,11 @@
                     <th>التصنيف</th>
                     <th>الصفحات</th>
                     <th>حالة الاستعارة</th>
+                    <th style="text-align: center;">إجراء</th>
                 </tr>
             </thead>
             <tbody id="tableBody">
-                <tr><td colspan="12" style="text-align:center;color:#94a3b8;padding:30px;">🔄 جاري تحميل البيانات...</td></tr>
+                <tr><td colspan="13" style="text-align:center;color:#94a3b8;padding:30px;">🔄 جاري تحميل البيانات...</td></tr>
             </tbody>
         </table>
     </div>
@@ -129,6 +142,7 @@
     const recordCount = document.getElementById('recordCount');
     const toast = document.getElementById('toast');
     const dbStatus = document.getElementById('dbStatus');
+    const searchInput = document.getElementById('searchInput');
 
     function showToast(msg, duration = 3000) {
         toast.innerText = msg;
@@ -157,6 +171,21 @@
         localStorage.setItem('tidybooks_data', JSON.stringify(data));
     }
 
+    function updateStorageAndRender(updatedList) {
+        globalBooks = updatedList;
+        if (isFirebaseConnected && booksRef) {
+            set(booksRef, updatedList).then(() => {
+                renderTable(globalBooks);
+            }).catch(() => {
+                saveToLocalStorage(updatedList);
+                renderTable(globalBooks);
+            });
+        } else {
+            saveToLocalStorage(updatedList);
+            renderTable(globalBooks);
+        }
+    }
+
     // تهيئة Firebase وتسجيل الدخول المجهول تلقائياً
     try {
         const app = initializeApp(firebaseConfig);
@@ -164,7 +193,6 @@
         db = getDatabase(app);
         booksRef = ref(db, 'library_books');
 
-        // تسجيل دخول مجهول تلقائي لتخطي خطأ المصادقة
         signInAnonymously(auth).catch((authError) => {
             console.warn("Auth Error:", authError);
             dbStatus.className = "status-badge status-local";
@@ -173,7 +201,6 @@
 
         onAuthStateChanged(auth, (user) => {
             if (user) {
-                // المتابعة بعد تسجيل الدخول بنجاح
                 onValue(booksRef, (snapshot) => {
                     isFirebaseConnected = true;
                     const data = snapshot.val();
@@ -304,16 +331,23 @@
     }
 
     function renderTable(books) {
-        if (!books || books.length === 0) {
-            tableBody.innerHTML = `<tr><td colspan="12" style="text-align:center;color:#94a3b8;padding:30px;">📭 السجل فارغ حالياً. قم بفرز بيانات جديدة لإضافتها.</td></tr>`;
-            recordCount.innerText = 'إجمالي الكتب: 0';
+        const query = searchInput.value.trim().toLowerCase();
+        const filteredBooks = books.filter(b => 
+            (b.title && b.title.toLowerCase().includes(query)) || 
+            (b.author && b.author.toLowerCase().includes(query))
+        );
+
+        if (!filteredBooks || filteredBooks.length === 0) {
+            tableBody.innerHTML = `<tr><td colspan="13" style="text-align:center;color:#94a3b8;padding:30px;">📭 لا توجد نتائج مطابقة.</td></tr>`;
+            recordCount.innerText = `إجمالي الكتب: ${books.length}`;
             return;
         }
 
         let html = '';
-        books.forEach((b, idx) => {
+        filteredBooks.forEach((b) => {
+            const originalIndex = globalBooks.indexOf(b);
             html += `<tr>
-                <td><strong>${b.seqNo || (idx + 1)}</strong></td>
+                <td><strong>${b.seqNo || (originalIndex + 1)}</strong></td>
                 <td><span class="badge">${b.inventoryNo}</span></td>
                 <td><strong>${b.title || '—'}</strong></td>
                 <td>${b.author || '—'}</td>
@@ -325,12 +359,40 @@
                 <td>${b.category}</td>
                 <td>${b.pages} ص</td>
                 <td><span style="color: #16a34a; font-weight:bold;">${b.status}</span></td>
+                <td style="text-align: center;">
+                    <button class="btn-sm-danger delete-single-btn" data-index="${originalIndex}">🗑️ حذف</button>
+                </td>
             </tr>`;
         });
 
         tableBody.innerHTML = html;
         recordCount.innerText = `إجمالي الكتب المحفوظة: ${books.length}`;
+
+        // ربط أحداث الحذف بالزر المنفرد
+        document.querySelectorAll('.delete-single-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const idx = parseInt(e.target.getAttribute('data-index'));
+                deleteSingleBook(idx);
+            });
+        });
     }
+
+    function deleteSingleBook(index) {
+        if (index >= 0 && index < globalBooks.length) {
+            const bookTitle = globalBooks[index].title || 'هذا الكتاب';
+            if (confirm(`هل أنت تأكد من حذف "${bookTitle}" من السجل؟`)) {
+                globalBooks.splice(index, 1);
+                // إعادة ترقيم السلسلة
+                globalBooks.forEach((b, i) => b.seqNo = i + 1);
+                updateStorageAndRender(globalBooks);
+                showToast(`🗑️ تم حذف "${bookTitle}" بنجاح`);
+            }
+        }
+    }
+
+    searchInput.addEventListener('input', () => {
+        renderTable(globalBooks);
+    });
 
     extractBtn.addEventListener('click', () => {
         const raw = inputText.value;
@@ -344,25 +406,9 @@
 
         if (parsedNewBooks.length > 0) {
             const updatedList = [...globalBooks, ...parsedNewBooks];
-            
-            if (isFirebaseConnected && booksRef) {
-                set(booksRef, updatedList).then(() => {
-                    inputText.value = '';
-                    showToast(`✅ تم إضافة ${parsedNewBooks.length} كتاب بنجاح للسجل السحابي`);
-                }).catch(() => {
-                    saveToLocalStorage(updatedList);
-                    globalBooks = updatedList;
-                    renderTable(globalBooks);
-                    inputText.value = '';
-                    showToast(`✅ تم حفظ ${parsedNewBooks.length} كتاب على الجهاز محلياً`);
-                });
-            } else {
-                saveToLocalStorage(updatedList);
-                globalBooks = updatedList;
-                renderTable(globalBooks);
-                inputText.value = '';
-                showToast(`✅ تم حفظ ${parsedNewBooks.length} كتاب على الجهاز محلياً`);
-            }
+            updateStorageAndRender(updatedList);
+            inputText.value = '';
+            showToast(`✅ تم إضافة ${parsedNewBooks.length} كتاب بنجاح للسجل`);
         } else {
             showToast('⚠️ لم يتم التعرف على بيانات كتب جديدة صالحة');
         }
