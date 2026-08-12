@@ -56,10 +56,10 @@
 <body>
 <div class="container">
     <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
-        <h1>📚 <span>نظام الفهرسة التلقائي</span> وتصدير أفقي لـ Excel</h1>
+        <h1>📚 <span>نظام الفهرسة التلقائي</span> واستخراج البيانات لـ Excel</h1>
         <div id="dbStatus" class="status-badge">🔄 جاري الاتصال والمصادقة...</div>
     </div>
-    <p>قم بلصق بيانات الكتب بأي تنسيق، وسيقوم النظام بتجميع بيانات كل كتاب وتوزيعها أفقيًا في صف واحد شامل لجميع الأعمدة.</p>
+    <p>قم بلصق نص البيانات، وسيقوم النظام بالتعرف الذكي على اسم الكتاب والبيانات وتسكين كل معلومة في عمودها المناسب طبقاً لحقول الكشف.</p>
 
     <div class="flex">
         <button class="btn btn-outline" id="organizeBtn">✨ تنظيم وإضافة النص المدخل</button>
@@ -76,7 +76,7 @@
         <button class="btn btn-warning" id="deleteSingleBtn">🗑️ مسح الكتاب المحدد</button>
     </div>
 
-    <textarea id="inputText" placeholder="الصق نص بيانات الكتب هنا..."></textarea>
+    <textarea id="inputText" placeholder="الصق نص بيانات الكتب هنا بأي شكل أو ترتيب..."></textarea>
     
     <div style="margin: 15px 0;" class="flex">
         <button class="btn btn-primary" id="extractBtn">➕ تنظيم وتنفيذ الإضافة</button>
@@ -306,7 +306,6 @@
         }
     });
 
-    // المحلل الأفقي الجديد لضمان صف أفق كامل لكل كتاب منعاً لنزول البيانات رأسياً
     function createNewBookObject(counter) {
         const todayStr = new Date().toISOString().split('T')[0];
         return {
@@ -365,89 +364,90 @@
         };
     }
 
+    // المحلل الذكي: استخراج اسم الكتاب والحقول وحقنها في أعمدة الكشف الرسمية طبقاً لنوع كل معلومة
     function parseMessyData(rawText, startingIndex = 1) {
         if (!rawText || !rawText.trim()) return [];
 
         let newBooks = [];
         let counter = startingIndex;
-        let currentBook = null;
 
-        // تقسيم النص إما بسطور فارغة أو بأسطر عادية
-        const rawLines = rawText.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+        // فصل الفقرات أو الأسطر التي تخص كل كتاب
+        const blocks = rawText.split(/\n\s*\n/).filter(b => b.trim().length > 0);
 
-        rawLines.forEach(line => {
-            // التحقق مما إذا كان السطر يمثل كتاب جديد برقم مسلسل مثل (1- / 1. / [1])
-            const isNumberedStart = /^\d+[\.\-\)]\s*/.test(line) || line.includes('اسم الكتاب:') || line.includes('العنوان:');
+        // إذا كان النشر ملصق بسطر سطر بدون فواصل فارغة
+        const linesList = (blocks.length > 1) ? blocks : rawText.split('\n').filter(l => l.trim().length > 0);
 
-            if (isNumberedStart) {
-                if (currentBook && currentBook.title) {
-                    newBooks.push(currentBook);
-                }
-                currentBook = createNewBookObject(counter++);
-            }
+        linesList.forEach(blockStr => {
+            let book = createNewBookObject(counter);
+            let chunks = blockStr.split(/[|\t;\n,،]/).map(c => c.trim()).filter(c => c.length > 0);
 
-            if (!currentBook) {
-                currentBook = createNewBookObject(counter++);
-            }
+            chunks.forEach((chunk) => {
+                let text = chunk.replace(/^\d+[\.\-\)]\s*/, '').trim();
 
-            // تقسيم أجزاء السطر أفقياً حسب الفواصل المخلفة (| , ، \t)
-            let chunks = line.split(/[|—–\t,،]/).map(c => c.trim()).filter(c => c.length > 0);
-
-            chunks.forEach((chunk, idx) => {
-                let cleanChunk = chunk.replace(/^\d+[\.\-\)]\s*/, '').trim();
-
-                if (cleanChunk.includes('اسم الكتاب:') || cleanChunk.includes('العنوان:')) {
-                    currentBook.title = cleanChunk.replace(/(اسم الكتاب|العنوان):\s*/g, '').trim();
-                } else if (cleanChunk.includes('المؤلف:') || cleanChunk.includes('تأليف:')) {
-                    currentBook.author = cleanChunk.replace(/(المؤلف|تأليف):\s*/g, '').trim();
-                    currentBook.fullNameAuthors = currentBook.author;
-                } else if (cleanChunk.includes('العنوان الفرعي:')) {
-                    currentBook.subtitle = cleanChunk.replace(/العنوان الفرعي:\s*/g, '').trim();
-                } else if (cleanChunk.includes('المترجم:') || cleanChunk.includes('ترجمة:')) {
-                    currentBook.translator = cleanChunk.replace(/(المترجم|ترجمة):\s*/g, '').trim();
-                } else if (cleanChunk.includes('المحقق:') || cleanChunk.includes('تحقيق:')) {
-                    currentBook.investigator = cleanChunk.replace(/(المحقق|تحقيق):\s*/g, '').trim();
-                } else if (cleanChunk.includes('المحرر:')) {
-                    currentBook.editor = cleanChunk.replace(/المحرر:\s*/g, '').trim();
-                } else if (cleanChunk.includes('دار النشر:') || cleanChunk.includes('الناشر:')) {
-                    currentBook.publisher = cleanChunk.replace(/(دار النشر|الناشر):\s*/g, '').trim();
-                } else if (cleanChunk.includes('مكان النشر:') || cleanChunk.includes('بلد النشر:')) {
-                    currentBook.publicationPlace = cleanChunk.replace(/(مكان النشر|بلد النشر):\s*/g, '').trim();
-                } else if (cleanChunk.includes('الطبعة:') || cleanChunk.includes('طبعة:')) {
-                    currentBook.edition = cleanChunk.replace(/(الطبعة|طبعة):\s*/g, '').trim();
-                } else if (cleanChunk.includes('سنة النشر:') || cleanChunk.includes('سنة:')) {
-                    currentBook.publishYear = cleanChunk.replace(/(سنة النشر|سنة):\s*/g, '').trim();
-                } else if (cleanChunk.includes('ISBN') || cleanChunk.includes('الردمك:')) {
-                    currentBook.isbn13 = cleanChunk.replace(/(ISBN-13|ISBN|الردمك):\s*/g, '').trim();
-                } else if (cleanChunk.includes('الصفحات:') || cleanChunk.includes('عدد الصفحات:')) {
-                    currentBook.pages = cleanChunk.replace(/(الصفحات|عدد الصفحات):\s*/g, '').trim();
-                } else if (cleanChunk.includes('التصنيف:')) {
-                    currentBook.category = cleanChunk.replace(/التصنيف:\s*/g, '').trim();
-                } else if (cleanChunk.includes('الموضوع:')) {
-                    currentBook.subject = cleanChunk.replace(/الموضوع:\s*/g, '').trim();
+                // 1. فحص الكلمات المفتاحية المباشرة
+                if (/(اسم الكتاب|عنوان الكتاب|العنوان|اسم المؤلف|تأليف|دار النشر|الناشر|سنة|طبعة|ترجمة|تحقيق|ردمك|ISBN|عدد الصفحات|التصنيف|الموضوع):/.test(text)) {
+                    if (/(اسم الكتاب|عنوان الكتاب|العنوان):/i.test(text)) {
+                        book.title = text.replace(/(اسم الكتاب|عنوان الكتاب|العنوان):\s*/gi, '').trim();
+                    } else if (/(اسم المؤلف|المؤلف|تأليف):/i.test(text)) {
+                        book.author = text.replace(/(اسم المؤلف|المؤلف|تأليف):\s*/gi, '').trim();
+                        book.fullNameAuthors = book.author;
+                    } else if (/(المترجم|ترجمة):/i.test(text)) {
+                        book.translator = text.replace(/(المترجم|ترجمة):\s*/gi, '').trim();
+                    } else if (/(المحقق|تحقيق):/i.test(text)) {
+                        book.investigator = text.replace(/(المحقق|تحقيق):\s*/gi, '').trim();
+                    } else if (/(دار النشر|الناشر):/i.test(text)) {
+                        book.publisher = text.replace(/(دار النشر|الناشر):\s*/gi, '').trim();
+                    } else if (/(مكان النشر|بلد النشر):/i.test(text)) {
+                        book.publicationPlace = text.replace(/(مكان النشر|بلد النشر):\s*/gi, '').trim();
+                    } else if (/(الطبعة|طبعة):/i.test(text)) {
+                        book.edition = text.replace(/(الطبعة|طبعة):\s*/gi, '').trim();
+                    } else if (/(سنة النشر|سنة):/i.test(text)) {
+                        book.publishYear = text.replace(/(سنة النشر|سنة):\s*/gi, '').trim();
+                    } else if (/(ISBN|ردمك|الردمك):/i.test(text)) {
+                        book.isbn13 = text.replace(/(ISBN|ردمك|الردمك):\s*/gi, '').trim();
+                    } else if (/(عدد الصفحات|الصفحات):/i.test(text)) {
+                        book.pages = text.replace(/(عدد الصفحات|الصفحات):\s*/gi, '').trim();
+                    } else if (/التصنيف:/i.test(text)) {
+                        book.category = text.replace(/التصنيف:\s*/gi, '').trim();
+                    } else if (/الموضوع:/i.test(text)) {
+                        book.subject = text.replace(/الموضوع:\s*/gi, '').trim();
+                    }
                 } else {
-                    // التوزيع التلقائي الأفقي حسب الترتيب
-                    if (!currentBook.title) {
-                        currentBook.title = cleanChunk;
-                    } else if (!currentBook.author) {
-                        currentBook.author = cleanChunk;
-                        currentBook.fullNameAuthors = currentBook.author;
-                    } else if (!currentBook.publisher) {
-                        currentBook.publisher = cleanChunk;
-                    } else if (!currentBook.publicationPlace) {
-                        currentBook.publicationPlace = cleanChunk;
-                    } else if (!currentBook.edition) {
-                        currentBook.edition = cleanChunk;
-                    } else if (!currentBook.publishYear) {
-                        currentBook.publishYear = cleanChunk;
+                    // 2. تحليل وتحديد الحقل ذكياً طبقاً لمحتوى المعلومة نفسها (تطابق نمط الكشف)
+                    if (/^(978|979)?\d{9,13}$/.test(text.replace(/[- ]/g, ''))) {
+                        book.isbn13 = text;
+                    } else if (/^\d{3,4}$/.test(text) && parseInt(text) > 1800 && parseInt(text) <= new Date().getFullYear() + 1) {
+                        book.publishYear = text;
+                    } else if (/^(\d+|الأولى|الثانية|الثالثة|الرابعة|الخامسة|السادسة|السابعة|الثامنة|التاسعة|العاشرة)\s*(طبعة|ط)?$/i.test(text)) {
+                        book.edition = text;
+                    } else if (/^\d+\s*(ص|صفحة|صفحات)?$/i.test(text)) {
+                        book.pages = text.replace(/\D/g, '');
+                    } else if (/(دار|مطبعة|مؤسسة|مركز|منشورات|مكتبة|شركة)\s+/i.test(text)) {
+                        if (!book.publisher) book.publisher = text;
+                    } else if (/(القاهرة|بيروت|الرياض|دمشق|عمان|بغداد|تونس|الرباط|الكويت|دبي|جدة|الشارقة|الجزائر)/i.test(text)) {
+                        if (!book.publicationPlace) book.publicationPlace = text;
+                    } else if (/(الدكتور|د\.|الشيخ|الأستاذ|إمام|الحافظ|ابن|أبو|أبي|عبدالله|محمد|علي|أحمد|محمود)/i.test(text) && !book.author) {
+                        book.author = text;
+                        book.fullNameAuthors = text;
+                    } else {
+                        // الافتراضي للعنوان وما يتبعه
+                        if (!book.title) {
+                            book.title = text;
+                        } else if (!book.author) {
+                            book.author = text;
+                            book.fullNameAuthors = text;
+                        } else if (!book.publisher) {
+                            book.publisher = text;
+                        }
                     }
                 }
             });
-        });
 
-        if (currentBook && currentBook.title) {
-            newBooks.push(currentBook);
-        }
+            if (book.title) {
+                newBooks.push(book);
+                counter++;
+            }
+        });
 
         return newBooks;
     }
@@ -506,14 +506,14 @@
             if (isFirebaseConnected && booksRef) {
                 set(booksRef, updatedList).then(() => {
                     inputText.value = '';
-                    showToast(`✨ تم تنظيم وإضافة ${parsedNewBooks.length} كتاب بنجاح أفقيًا في صف واحد متكامل`);
+                    showToast(`✨ تم التعرف واستخراج ${parsedNewBooks.length} كتاب بنجاح وتسكين معلوماتها طبقاً لأعمدة الكشف`);
                 }).catch(() => {
                     saveToLocalStorage(updatedList);
                     globalBooks = updatedList;
                     renderTable(globalBooks);
                     updateDropdownOptions(globalBooks);
                     inputText.value = '';
-                    showToast(`✨ تم تنظيم وإضافة ${parsedNewBooks.length} كتاب جديد محلياً`);
+                    showToast(`✨ تم استخراج وتنظيم ${parsedNewBooks.length} كتاب بنجاح محلياً`);
                 });
             } else {
                 saveToLocalStorage(updatedList);
@@ -521,7 +521,7 @@
                 renderTable(globalBooks);
                 updateDropdownOptions(globalBooks);
                 inputText.value = '';
-                showToast(`✨ تم تنظيم وإضافة ${parsedNewBooks.length} كتاب جديد محلياً`);
+                showToast(`✨ تم استخراج وتنظيم ${parsedNewBooks.length} كتاب بنجاح محلياً`);
             }
         } else {
             showToast('⚠️ لم يتم التعرف على بيانات كتب صالحة في النص المدخل');
