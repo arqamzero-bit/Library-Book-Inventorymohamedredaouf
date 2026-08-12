@@ -8,11 +8,12 @@
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { font-family: 'Tajawal', sans-serif; background: #f0f4f8; padding: 20px; color: #1e293b; }
-        .container { max-width: 1200px; margin: 0 auto; background: white; padding: 25px; border-radius: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+        .container { max-width: 1250px; margin: 0 auto; background: white; padding: 25px; border-radius: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
         h1 { color: #0f172a; margin-bottom: 8px; font-size: 24px; }
         h1 span { color: #2563eb; }
         p { color: #475569; margin-bottom: 20px; font-size: 14px; }
-        textarea { width: 100%; min-height: 140px; padding: 12px; border: 1.5px solid #cbd5e1; border-radius: 12px; font-family: 'Tajawal', sans-serif; font-size: 13.5px; background: #f8fafc; resize: vertical; }
+        textarea { width: 100%; min-height: 150px; padding: 14px; border: 1.5px solid #cbd5e1; border-radius: 12px; font-family: 'Tajawal', sans-serif; font-size: 13.5px; background: #f8fafc; resize: vertical; line-height: 1.6; }
+        textarea:focus { border-color: #2563eb; outline: none; background: #fff; }
         .input-field {
             padding: 10px 14px; border: 1.5px solid #cbd5e1; border-radius: 10px; font-family: 'Tajawal', sans-serif;
             font-size: 13.5px; outline: none; background: #fff;
@@ -22,25 +23,26 @@
             font-size: 13.5px; outline: none; background: #fff; max-width: 320px; flex: 1; cursor: pointer;
         }
         .btn {
-            padding: 10px 20px; border: none; border-radius: 50px; font-weight: 700; font-size: 13.5px;
-            font-family: 'Tajawal', sans-serif; cursor: pointer; transition: 0.2s;
-            display: inline-flex; align-items: center; gap: 8px;
+            padding: 11px 22px; border: none; border-radius: 50px; font-weight: 700; font-size: 13.5px;
+            font-family: 'Tajawal', sans-serif; cursor: pointer; transition: all 0.2s ease-in-out;
+            display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 2px 6px rgba(0,0,0,0.05);
         }
+        .btn:disabled { opacity: 0.6; cursor: not-allowed; }
         .btn-primary { background: #2563eb; color: white; }
         .btn-primary:hover { background: #1d4ed8; }
-        .btn-ai { background: linear-gradient(135deg, #8b5cf6, #6366f1); color: white; box-shadow: 0 2px 10px rgba(124, 58, 237, 0.3); }
-        .btn-ai:hover { background: linear-gradient(135deg, #7c3aed, #4f46e5); }
+        .btn-ai { background: linear-gradient(135deg, #7c3aed, #4f46e5); color: white; box-shadow: 0 4px 12px rgba(124, 58, 237, 0.3); }
+        .btn-ai:hover { background: linear-gradient(135deg, #6d28d9, #4338ca); transform: translateY(-1px); }
         .btn-success { background: #16a34a; color: white; }
         .btn-success:hover { background: #15803d; }
         .btn-danger { background: #ef4444; color: white; }
         .btn-danger:hover { background: #dc2626; }
         .btn-warning { background: #f59e0b; color: white; }
         .btn-warning:hover { background: #d97706; }
-        .btn-outline { background: #f1f5f9; border: 2px solid #cbd5e1; color: #334155; }
-        .btn-outline:hover { background: #e2e8f0; }
+        .btn-outline { background: #ffffff; border: 2px solid #cbd5e1; color: #334155; }
+        .btn-outline:hover { background: #f1f5f9; border-color: #94a3b8; }
         .flex { display: flex; gap: 10px; flex-wrap: wrap; margin: 15px 0; align-items: center; }
         .card-box { background: #f8fafc; padding: 15px; border-radius: 12px; border: 1px solid #e2e8f0; margin-bottom: 15px; }
-        .table-wrapper { overflow-x: auto; margin: 15px 0; border-radius: 12px; border: 1px solid #e2e8f0; max-height: 500px; }
+        .table-wrapper { overflow-x: auto; margin: 15px 0; border-radius: 12px; border: 1px solid #e2e8f0; max-height: 520px; }
         table { width: 100%; border-collapse: collapse; font-size: 13px; white-space: nowrap; }
         th { background: #1e3a8a; color: white; font-weight: 700; padding: 12px 10px; text-align: right; border-bottom: 2px solid #cbd5e1; position: sticky; top: 0; z-index: 10; }
         td { padding: 10px; border-bottom: 1px solid #e2e8f0; }
@@ -50,7 +52,7 @@
         .status-badge { background: #fef3c7; color: #92400e; padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: bold; display: inline-flex; align-items: center; gap: 5px; }
         .status-online { background: #d1fae5; color: #065f46; }
         .status-local { background: #e0f2fe; color: #0369a1; }
-        .toast { position: fixed; bottom: 30px; left: 30px; background: #0f172a; color: white; padding: 12px 24px; border-radius: 12px; font-weight: 700; display: none; z-index: 999; }
+        .toast { position: fixed; bottom: 30px; left: 30px; background: #0f172a; color: white; padding: 12px 24px; border-radius: 12px; font-weight: 700; display: none; z-index: 999; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
         .section-tag { background: #e0e7ff; color: #3730a3; padding: 4px 12px; border-radius: 6px; font-size: 12px; font-weight: bold; margin-bottom: 10px; display: inline-block; }
         footer { margin-top: 25px; text-align: center; padding: 15px; border-top: 1px solid #e2e8f0; color: #64748b; font-size: 13px; font-weight: 700; }
     </style>
@@ -58,32 +60,33 @@
 <body>
 <div class="container">
     <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
-        <h1>📚 <span>نظام الفهرسة التلقائي</span> وتصدير أفقي لـ Excel</h1>
+        <h1>📚 <span>نظام الفهرسة والتصنيف الذكي</span> - TidyBooks</h1>
         <div id="dbStatus" class="status-badge">🔄 جاري الاتصال والمصادقة...</div>
     </div>
-    <p>قم بلصق بيانات الكتب بأي تنسيق، وسيقوم النظام بتجميع بيانات كل كتاب وتوزيعها أفقيًا في صف واحد شامل لجميع الأعمدة.</p>
+    <p>قم بلصق كشف بيانات الكتب بأي تنسيق، ثم اضغط على زر التصحيح والتصنيف لوضع كل معلومة تحت مسمّاها الصحيح بدقة متناهية.</p>
 
     <div class="flex">
-        <button class="btn btn-outline" id="organizeBtn">✨ تنظيم وإضافة النص المدخل</button>
-        <button class="btn btn-ai" id="aiCompleteBtn">🤖 ✨ تكملة البيانات الذكية من الإنترنت والذكاء الاصطناعي</button>
+        <button class="btn btn-ai" id="aiCompleteBtn">🤖 ✨ تصحيح واستكمال البيانات عبر النت والذكاء الاصطناعي</button>
         <button class="btn btn-success" id="exportExcelBtn">📊 تصدير ملف Excel (3 شيتات)</button>
         <button class="btn btn-danger" id="clearBtn">🗑️ مسح البيانات المخزنة بالكامل</button>
     </div>
 
     <!-- قسم مسح كتاب محدد والبحث -->
     <div class="card-box flex">
-        <input type="text" id="searchBookInput" class="input-field" placeholder="🔍 ابحث عن اسم الكتاب هنا..." style="flex: 1; min-width: 200px;">
+        <input type="text" id="searchBookInput" class="input-field" placeholder="🔍 ابحث عن اسم الكتاب أو رقم الجرد..." style="flex: 1; min-width: 200px;">
         <select id="bookSelectDropdown" class="select-field">
             <option value="">اختر كتاباً لحذفه...</option>
         </select>
         <button class="btn btn-warning" id="deleteSingleBtn">🗑️ مسح الكتاب المحدد</button>
     </div>
 
-    <textarea id="inputText" placeholder="الصق نص بيانات الكتب هنا..."></textarea>
+    <textarea id="inputText" placeholder="الصق نص كشف البيانات هنا... 
+مثال:
+اسم الكتاب: تفسير الجلالين | المؤلف: جلال الدين السيوطي | دار النشر: دار المعارف | سنة النشر: 2005 | عدد الصفحات: 600"></textarea>
     
     <div style="margin: 15px 0;" class="flex">
-        <button class="btn btn-primary" id="extractBtn">➕ تنظيم وتنفيذ الإضافة</button>
-        <span style="font-size:14px; color:#1e293b; font-weight:bold;" id="recordCount">إجمالي الكتب: 0</span>
+        <button class="btn btn-primary" id="processDataBtn">🎯 تصحيح وتصنيف المعلومات طبقاً للكشف ووضعها تحت مسمياتها</button>
+        <span style="font-size:14px; color:#1e293b; font-weight:bold; margin-right: auto;" id="recordCount">إجمالي الكتب: 0</span>
     </div>
 
     <div class="section-tag">المعاينة الفورية: الكتب المحفوظة بالسجل</div>
@@ -154,8 +157,7 @@
 
     const inputText = document.getElementById('inputText');
     const tableBody = document.getElementById('tableBody');
-    const extractBtn = document.getElementById('extractBtn');
-    const organizeBtn = document.getElementById('organizeBtn');
+    const processDataBtn = document.getElementById('processDataBtn');
     const aiCompleteBtn = document.getElementById('aiCompleteBtn');
     const exportExcelBtn = document.getElementById('exportExcelBtn');
     const clearBtn = document.getElementById('clearBtn');
@@ -187,7 +189,6 @@
             const title = (b.title || '').toString();
             const author = (b.author || '').toString();
             const translator = (b.translator || '').toString();
-
             if (title.includes('رنا الصيفي') || author.includes('رنا الصيفي') || translator.includes('رنا الصيفي')) {
                 return false;
             }
@@ -293,7 +294,6 @@
 
         if (confirm(`هل أنت تأكد من حذف "${bookName}" فقط من السجل؟`)) {
             const updatedList = globalBooks.filter(b => b.inventoryNo !== selectedVal && b.seqNo != selectedVal);
-
             updatedList.forEach((b, idx) => b.seqNo = idx + 1);
 
             if (isFirebaseConnected && booksRef) {
@@ -310,7 +310,6 @@
         }
     });
 
-    // المحلل الأفقي الجديد لضمان صف أفق كامل لكل كتاب منعاً لنزول البيانات رأسياً
     function createNewBookObject(counter) {
         const todayStr = new Date().toISOString().split('T')[0];
         return {
@@ -363,13 +362,14 @@
             toc: '',
             bookLink: '',
             coverLink: '',
-            dataSource: 'النظام الداخلي للمكتبة',
+            dataSource: 'الكشف المدخل',
             lastUpdate: todayStr,
             trustDegree: 'عالية (100%)'
         };
     }
 
-    function parseMessyData(rawText, startingIndex = 1) {
+    // محرك الفرز الذكي الدقيق لتصنيف وتصحيح المعلومات المأخوذة من الكشف بدقة متناهية
+    function parseAndClassifyData(rawText, startingIndex = 1) {
         if (!rawText || !rawText.trim()) return [];
 
         let newBooks = [];
@@ -379,7 +379,7 @@
         const rawLines = rawText.split('\n').map(l => l.trim()).filter(l => l.length > 0);
 
         rawLines.forEach(line => {
-            const isNumberedStart = /^\d+[\.\-\)]\s*/.test(line) || line.includes('اسم الكتاب:') || line.includes('العنوان:');
+            const isNumberedStart = /^\d+[\.\-\)]\s*/.test(line) || line.startsWith('كتاب') || line.includes('اسم الكتاب:') || line.includes('العنوان:');
 
             if (isNumberedStart) {
                 if (currentBook && currentBook.title) {
@@ -392,54 +392,58 @@
                 currentBook = createNewBookObject(counter++);
             }
 
-            let chunks = line.split(/[|—–\t,،]/).map(c => c.trim()).filter(c => c.length > 0);
+            let chunks = line.split(/[|—–\t;]/).map(c => c.trim()).filter(c => c.length > 0);
 
-            chunks.forEach((chunk, idx) => {
+            chunks.forEach((chunk) => {
                 let cleanChunk = chunk.replace(/^\d+[\.\-\)]\s*/, '').trim();
 
-                if (cleanChunk.includes('اسم الكتاب:') || cleanChunk.includes('العنوان:')) {
-                    currentBook.title = cleanChunk.replace(/(اسم الكتاب|العنوان):\s*/g, '').trim();
-                } else if (cleanChunk.includes('المؤلف:') || cleanChunk.includes('تأليف:')) {
-                    currentBook.author = cleanChunk.replace(/(المؤلف|تأليف):\s*/g, '').trim();
+                // مطابقة الكلمات المفتاحية وضبط كل قيمة تحت مسمّاها الصحيح بالضبط
+                if (/(اسم الكتاب|عنوان الكتاب|العنوان الرئيسي|العنوان):/i.test(cleanChunk)) {
+                    currentBook.title = cleanChunk.replace(/(اسم الكتاب|عنوان الكتاب|العنوان الرئيسي|العنوان):\s*/gi, '').trim();
+                } else if (/(العنوان الفرعي|عنوان ثانوي):/i.test(cleanChunk)) {
+                    currentBook.subtitle = cleanChunk.replace(/(العنوان الفرعي|عنوان ثانوي):\s*/gi, '').trim();
+                } else if (/(المؤلف|تأليف|المؤلفون|الكاتب):/i.test(cleanChunk)) {
+                    currentBook.author = cleanChunk.replace(/(المؤلف|تأليف|المؤلفون|الكاتب):\s*/gi, '').trim();
                     currentBook.fullNameAuthors = currentBook.author;
-                } else if (cleanChunk.includes('العنوان الفرعي:')) {
-                    currentBook.subtitle = cleanChunk.replace(/العنوان الفرعي:\s*/g, '').trim();
-                } else if (cleanChunk.includes('المترجم:') || cleanChunk.includes('ترجمة:')) {
-                    currentBook.translator = cleanChunk.replace(/(المترجم|ترجمة):\s*/g, '').trim();
-                } else if (cleanChunk.includes('المحقق:') || cleanChunk.includes('تحقيق:')) {
-                    currentBook.investigator = cleanChunk.replace(/(المحقق|تحقيق):\s*/g, '').trim();
-                } else if (cleanChunk.includes('المحرر:')) {
-                    currentBook.editor = cleanChunk.replace(/المحرر:\s*/g, '').trim();
-                } else if (cleanChunk.includes('دار النشر:') || cleanChunk.includes('الناشر:')) {
-                    currentBook.publisher = cleanChunk.replace(/(دار النشر|الناشر):\s*/g, '').trim();
-                } else if (cleanChunk.includes('مكان النشر:') || cleanChunk.includes('بلد النشر:')) {
-                    currentBook.publicationPlace = cleanChunk.replace(/(مكان النشر|بلد النشر):\s*/g, '').trim();
-                } else if (cleanChunk.includes('الطبعة:') || cleanChunk.includes('طبعة:')) {
-                    currentBook.edition = cleanChunk.replace(/(الطبعة|طبعة):\s*/g, '').trim();
-                } else if (cleanChunk.includes('سنة النشر:') || cleanChunk.includes('سنة:')) {
-                    currentBook.publishYear = cleanChunk.replace(/(سنة النشر|سنة):\s*/g, '').trim();
-                } else if (cleanChunk.includes('ISBN') || cleanChunk.includes('الردمك:')) {
-                    currentBook.isbn13 = cleanChunk.replace(/(ISBN-13|ISBN|الردمك):\s*/g, '').trim();
-                } else if (cleanChunk.includes('الصفحات:') || cleanChunk.includes('عدد الصفحات:')) {
-                    currentBook.pages = cleanChunk.replace(/(الصفحات|عدد الصفحات):\s*/g, '').trim();
-                } else if (cleanChunk.includes('التصنيف:')) {
-                    currentBook.category = cleanChunk.replace(/التصنيف:\s*/g, '').trim();
-                } else if (cleanChunk.includes('الموضوع:')) {
-                    currentBook.subject = cleanChunk.replace(/الموضوع:\s*/g, '').trim();
+                } else if (/(المترجم|ترجمة):/i.test(cleanChunk)) {
+                    currentBook.translator = cleanChunk.replace(/(المترجم|ترجمة):\s*/gi, '').trim();
+                } else if (/(المحقق|تحقيق):/i.test(cleanChunk)) {
+                    currentBook.investigator = cleanChunk.replace(/(المحقق|تحقيق):\s*/gi, '').trim();
+                } else if (/(المحرر|إعداد):/i.test(cleanChunk)) {
+                    currentBook.editor = cleanChunk.replace(/(المحرر|إعداد):\s*/gi, '').trim();
+                } else if (/(دار النشر|الناشر|المطبعة):/i.test(cleanChunk)) {
+                    currentBook.publisher = cleanChunk.replace(/(دار النشر|الناشر|المطبعة):\s*/gi, '').trim();
+                } else if (/(مكان النشر|بلد النشر|مدينة النشر):/i.test(cleanChunk)) {
+                    currentBook.publicationPlace = cleanChunk.replace(/(مكان النشر|بلد النشر|مدينة النشر):\s*/gi, '').trim();
+                } else if (/(الطبعة|رقم الطبعة):/i.test(cleanChunk)) {
+                    currentBook.edition = cleanChunk.replace(/(الطبعة|رقم الطبعة):\s*/gi, '').trim();
+                } else if (/(سنة النشر|تاريخ النشر|السنة):/i.test(cleanChunk)) {
+                    currentBook.publishYear = cleanChunk.replace(/(سنة النشر|تاريخ النشر|السنة):\s*/gi, '').trim();
+                } else if (/(ISBN|الردمك|التدقيم الدولي):/i.test(cleanChunk)) {
+                    let isbnVal = cleanChunk.replace(/(ISBN-13|ISBN-10|ISBN|الردمك|التدقيم الدولي):\s*/gi, '').trim();
+                    if (isbnVal.replace(/[^0-9]/g, '').length === 10) currentBook.isbn10 = isbnVal;
+                    else currentBook.isbn13 = isbnVal;
+                } else if (/(الصفحات|عدد الصفحات|صفحة):/i.test(cleanChunk)) {
+                    currentBook.pages = cleanChunk.replace(/(الصفحات|عدد الصفحات|صفحة):\s*/gi, '').replace(/[^0-9]/g, '').trim();
+                } else if (/(التصنيف|فن الكتاب|المجال):/i.test(cleanChunk)) {
+                    currentBook.category = cleanChunk.replace(/(التصنيف|فن الكتاب|المجال):\s*/gi, '').trim();
+                } else if (/(الموضوع|موضوع الكتاب):/i.test(cleanChunk)) {
+                    currentBook.subject = cleanChunk.replace(/(الموضوع|موضوع الكتاب):\s*/gi, '').trim();
+                } else if (/(حجم الكتاب|القياس):/i.test(cleanChunk)) {
+                    currentBook.bookSize = cleanChunk.replace(/(حجم الكتاب|القياس):\s*/gi, '').trim();
+                } else if (/(اللغة):/i.test(cleanChunk)) {
+                    currentBook.language = cleanChunk.replace(/(اللغة):\s*/gi, '').trim();
                 } else {
+                    // التوزيع المباشر الذكي في حال عدم وجود نقطتين شارتين (المفاهيم الشائعة)
                     if (!currentBook.title) {
                         currentBook.title = cleanChunk;
-                    } else if (!currentBook.author) {
+                    } else if (!currentBook.author && !/\d{4}/.test(cleanChunk)) {
                         currentBook.author = cleanChunk;
                         currentBook.fullNameAuthors = currentBook.author;
-                    } else if (!currentBook.publisher) {
+                    } else if (!currentBook.publisher && !/\d{4}/.test(cleanChunk)) {
                         currentBook.publisher = cleanChunk;
-                    } else if (!currentBook.publicationPlace) {
-                        currentBook.publicationPlace = cleanChunk;
-                    } else if (!currentBook.edition) {
-                        currentBook.edition = cleanChunk;
-                    } else if (!currentBook.publishYear) {
-                        currentBook.publishYear = cleanChunk;
+                    } else if (!currentBook.publishYear && /\b(19|20)\d{2}\b/.test(cleanChunk)) {
+                        currentBook.publishYear = cleanChunk.match(/\b(19|20)\d{2}\b/)[0];
                     }
                 }
             });
@@ -452,62 +456,89 @@
         return newBooks;
     }
 
-    // --- الربط الفعلي الذكي بالإنترنت للبحث وتكملة بيانات الكتاب ناقصة الأجزاء ---
-    async function fetchBookDataFromWeb(book) {
+    // --- الربط الفعلي الحي المتعدد المصادر بالإنترنت لاستكمال البيانات وتصحيحها ---
+    async function fetchOnlineBookData(book) {
+        let result = null;
+
+        // 1. الاستعلام عبر Google Books API
         try {
-            const query = encodeURIComponent(`${book.title} ${book.author || ''}`.trim());
-            const response = await fetch(`https://www.googleapis.com/books/v1/volumes?q=${query}&langRestrict=ar&maxResults=1`);
-            if (!response.ok) return null;
-            
-            const data = await response.json();
-            if (data.items && data.items.length > 0) {
-                const info = data.items[0].volumeInfo;
-                return {
-                    title: info.title || book.title,
-                    subtitle: info.subtitle || book.subtitle,
-                    author: (info.authors && info.authors.length > 0) ? info.authors.join('، ') : book.author,
-                    publisher: info.publisher || book.publisher,
-                    publishYear: info.publishedDate ? info.publishedDate.substring(0, 4) : book.publishYear,
-                    description: info.description || book.description,
-                    pages: info.pageCount ? info.pageCount.toString() : book.pages,
-                    language: info.language === 'ar' ? 'العربية' : (info.language || book.language),
-                    category: (info.categories && info.categories.length > 0) ? info.categories.join('، ') : book.category,
-                    isbn13: info.industryIdentifiers ? (info.industryIdentifiers.find(i => i.type === 'ISBN_13')?.identifier || book.isbn13) : book.isbn13,
-                    isbn10: info.industryIdentifiers ? (info.industryIdentifiers.find(i => i.type === 'ISBN_10')?.identifier || book.isbn10) : book.isbn10,
-                    bookLink: info.infoLink || book.bookLink,
-                    coverLink: info.imageLinks?.thumbnail || book.coverLink,
-                    dataSource: 'Google Books API & الويب الذكي',
-                    trustDegree: 'مؤكدة من الويب (98%)'
-                };
+            const query = encodeURIComponent(`intitle:${book.title} ${book.author ? 'inauthor:' + book.author : ''}`.trim());
+            const res = await fetch(`https://www.googleapis.com/books/v1/volumes?q=${query}&langRestrict=ar&maxResults=1`);
+            if (res.ok) {
+                const data = await res.json();
+                if (data.items && data.items.length > 0) {
+                    const info = data.items[0].volumeInfo;
+                    result = {
+                        title: info.title || book.title,
+                        subtitle: info.subtitle || book.subtitle,
+                        author: (info.authors && info.authors.length > 0) ? info.authors.join('، ') : book.author,
+                        publisher: info.publisher || book.publisher,
+                        publishYear: info.publishedDate ? info.publishedDate.substring(0, 4) : book.publishYear,
+                        description: info.description || book.description,
+                        pages: info.pageCount ? info.pageCount.toString() : book.pages,
+                        language: info.language === 'ar' ? 'العربية' : (info.language || book.language),
+                        category: (info.categories && info.categories.length > 0) ? info.categories.join('، ') : book.category,
+                        isbn13: info.industryIdentifiers ? (info.industryIdentifiers.find(i => i.type === 'ISBN_13')?.identifier || book.isbn13) : book.isbn13,
+                        isbn10: info.industryIdentifiers ? (info.industryIdentifiers.find(i => i.type === 'ISBN_10')?.identifier || book.isbn10) : book.isbn10,
+                        bookLink: info.infoLink || book.bookLink,
+                        coverLink: info.imageLinks?.thumbnail || book.coverLink,
+                        dataSource: 'محرك الويب والذكاء الاصطناعي (Google Books)',
+                        trustDegree: 'مؤكدة 98%'
+                    };
+                }
             }
         } catch (e) {
-            console.error('AI Web Fetch Error:', e);
+            console.error('Google Books API Fetch failed:', e);
         }
-        return null;
+
+        // 2. الاستعلام الاحتياطي عبر Open Library API
+        if (!result) {
+            try {
+                const queryAlt = encodeURIComponent(book.title);
+                const resAlt = await fetch(`https://openlibrary.org/search.json?title=${queryAlt}&limit=1`);
+                if (resAlt.ok) {
+                    const dataAlt = await resAlt.json();
+                    if (dataAlt.docs && dataAlt.docs.length > 0) {
+                        const info = dataAlt.docs[0];
+                        result = {
+                            title: info.title || book.title,
+                            author: (info.author_name && info.author_name.length > 0) ? info.author_name.join('، ') : book.author,
+                            publisher: (info.publisher && info.publisher.length > 0) ? info.publisher[0] : book.publisher,
+                            publishYear: info.first_publish_year ? info.first_publish_year.toString() : book.publishYear,
+                            language: book.language,
+                            isbn13: (info.isbn && info.isbn.length > 0) ? info.isbn[0] : book.isbn13,
+                            dataSource: 'محرك الويب المفتوح (Open Library)',
+                            trustDegree: 'مؤكدة 92%'
+                        };
+                    }
+                }
+            } catch (e) {
+                console.error('OpenLibrary API Fetch failed:', e);
+            }
+        }
+
+        return result;
     }
 
     aiCompleteBtn.addEventListener('click', async () => {
         if (globalBooks.length === 0) {
-            showToast('⚠️ لا توجد كتب محفوظة بالسجل لتكملة بياناتها من الإنترنت');
+            showToast('⚠️ لا توجد كتب محفوظة بالسجل لتكملة وتصحيح بياناتها من النت');
             return;
         }
 
         aiCompleteBtn.disabled = true;
-        aiCompleteBtn.innerHTML = '🌐⚡ جاري الاتصال بالويب واستكمال البيانات...';
-        showToast('🔄 جاري البحث المباشر في الويب وقواعد البيانات العالمية للكتب...');
+        aiCompleteBtn.innerHTML = '🌐⚡ جاري الاتصال بالإنترنت وجلب وتصحيح البيانات...';
+        showToast('🔄 جاري البحث والتصحيح المباشر في الويب وقواعد البيانات العالمية للكتب...');
 
         let updatedCount = 0;
         let updatedList = [...globalBooks];
 
         for (let i = 0; i < updatedList.length; i++) {
             let b = updatedList[i];
-            // إجراء بحث واستكمال البيانات إذا كانت هناك أجزاء ناقصة
-            if (b.title && (!b.publisher || !b.publishYear || !b.pages || !b.category || !b.isbn13 || !b.description)) {
-                const fetchedData = await fetchBookDataFromWeb(b);
-                if (fetchedData) {
-                    updatedList[i] = { ...b, ...fetchedData };
-                    updatedCount++;
-                }
+            const fetchedData = await fetchOnlineBookData(b);
+            if (fetchedData) {
+                updatedList[i] = { ...b, ...fetchedData };
+                updatedCount++;
             }
         }
 
@@ -517,11 +548,11 @@
             renderTable(globalBooks);
             updateDropdownOptions(globalBooks);
             aiCompleteBtn.disabled = false;
-            aiCompleteBtn.innerHTML = '🤖 ✨ تكملة البيانات الذكية من الإنترنت والذكاء الاصطناعي';
+            aiCompleteBtn.innerHTML = '🤖 ✨ تصحيح واستكمال البيانات عبر النت والذكاء الاصطناعي';
             if (updatedCount > 0) {
-                showToast(`🎉 تم استكمال وتحديث بيانات ${updatedCount} كتاب بنجاح من الويب والذكاء الاصطناعي!`);
+                showToast(`🎉 تم تصحيح وتكميل بيانات ${updatedCount} كتاب من النت والذكاء الاصطناعي بنجاح!`);
             } else {
-                showToast('💡 جميع البيانات المتاحة مكتملة بالفعل أو تم تحديثها سابقاً');
+                showToast('💡 اكتمل البحث، لم يتم العثور على تحديثات إضافية جديدة لمُدخلات السجل حالياً');
             }
         };
 
@@ -538,7 +569,7 @@
 
     function renderTable(books) {
         if (!books || books.length === 0) {
-            tableBody.innerHTML = `<tr><td colspan="21" style="text-align:center;color:#94a3b8;padding:30px;">📭 السجل فارغ حالياً. قم بلصق نص البيانات لإضافتها وتنظيمها.</td></tr>`;
+            tableBody.innerHTML = `<tr><td colspan="21" style="text-align:center;color:#94a3b8;padding:30px;">📭 السجل فارغ حالياً. قم بلصق كشف البيانات واضغط زر التصحيح والتصنيف.</td></tr>`;
             recordCount.innerText = 'إجمالي الكتب: 0';
             return;
         }
@@ -574,15 +605,15 @@
         recordCount.innerText = `إجمالي الكتب المحفوظة: ${books.length}`;
     }
 
-    function handleDataInsertion() {
+    processDataBtn.addEventListener('click', () => {
         const raw = inputText.value;
         if (!raw.trim()) {
-            showToast('⚠️ يرجى لصق نص أولاً في مربع النص لتنظيمه وإضافته');
+            showToast('⚠️ يرجى لصق نص الكشف أولاً في مربع النص لتصحيحه وتصنيفه');
             return;
         }
 
         const startIdx = globalBooks.length + 1;
-        const parsedNewBooks = parseMessyData(raw, startIdx);
+        const parsedNewBooks = parseAndClassifyData(raw, startIdx);
 
         if (parsedNewBooks.length > 0) {
             const updatedList = [...globalBooks, ...parsedNewBooks];
@@ -590,14 +621,14 @@
             if (isFirebaseConnected && booksRef) {
                 set(booksRef, updatedList).then(() => {
                     inputText.value = '';
-                    showToast(`✨ تم تنظيم وإضافة ${parsedNewBooks.length} كتاب بنجاح أفقيًا في صف واحد متكامل`);
+                    showToast(`✨ تم تصنيف وتصحيح ${parsedNewBooks.length} كتاب ووضع كل معلومة بمكانها الصحيح`);
                 }).catch(() => {
                     saveToLocalStorage(updatedList);
                     globalBooks = updatedList;
                     renderTable(globalBooks);
                     updateDropdownOptions(globalBooks);
                     inputText.value = '';
-                    showToast(`✨ تم تنظيم وإضافة ${parsedNewBooks.length} كتاب جديد محلياً`);
+                    showToast(`✨ تم تصنيف وتصحيح ${parsedNewBooks.length} كتاب محلياً`);
                 });
             } else {
                 saveToLocalStorage(updatedList);
@@ -605,15 +636,12 @@
                 renderTable(globalBooks);
                 updateDropdownOptions(globalBooks);
                 inputText.value = '';
-                showToast(`✨ تم تنظيم وإضافة ${parsedNewBooks.length} كتاب جديد محلياً`);
+                showToast(`✨ تم تصنيف وتصحيح ${parsedNewBooks.length} كتاب محلياً`);
             }
         } else {
-            showToast('⚠️ لم يتم التعرف على بيانات كتب صالحة في النص المدخل');
+            showToast('⚠️ لم يتم التعرف على بيانات كتب صالحة في الكشف المدخل');
         }
-    }
-
-    extractBtn.addEventListener('click', handleDataInsertion);
-    organizeBtn.addEventListener('click', handleDataInsertion);
+    });
 
     clearBtn.addEventListener('click', () => {
         if (confirm("هل أنت تأكد من مسح جميع البيانات المخزنة بالكامل؟")) {
