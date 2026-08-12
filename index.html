@@ -143,11 +143,30 @@
         return now.toLocaleDateString('ar-EG', options);
     }
 
+    // دالة فلترة وتطهير البيانات من الإدخالات القديمة أو النماذج الوهمية
+    function cleanOldTrashData(booksList) {
+        if (!Array.isArray(booksList)) return [];
+        return booksList.filter(b => {
+            if (!b) return false;
+            const title = (b.title || '').toString();
+            const author = (b.author || '').toString();
+            const translator = (b.translator || '').toString();
+
+            // استبعاد أي سجل يحتوي على رنا الصيفي أو بيانات تجريبية قديمة
+            if (title.includes('رنا الصيفي') || author.includes('رنا الصيفي') || translator.includes('رنا الصيفي')) {
+                return false;
+            }
+            return true;
+        });
+    }
+
     function loadFromLocalStorage() {
         const localData = localStorage.getItem('tidybooks_data');
         if (localData) {
             try {
-                globalBooks = JSON.parse(localData);
+                let parsed = JSON.parse(localData);
+                globalBooks = cleanOldTrashData(parsed);
+                saveToLocalStorage(globalBooks);
             } catch(e) { globalBooks = []; }
         }
         renderTable(globalBooks);
@@ -174,7 +193,15 @@
                 onValue(booksRef, (snapshot) => {
                     isFirebaseConnected = true;
                     const data = snapshot.val();
-                    globalBooks = data ? (Array.isArray(data) ? data : Object.values(data)) : [];
+                    let rawList = data ? (Array.isArray(data) ? data : Object.values(data)) : [];
+                    
+                    // تنظيف البيانات القادمة من Firebase تلقائياً
+                    let cleanedList = cleanOldTrashData(rawList);
+                    if (cleanedList.length !== rawList.length) {
+                        set(booksRef, cleanedList); // تحديث السيرفر بالبيانات النظيفة
+                    }
+
+                    globalBooks = cleanedList;
                     saveToLocalStorage(globalBooks);
                     renderTable(globalBooks);
                     dbStatus.className = "status-badge status-online";
@@ -194,7 +221,7 @@
         loadFromLocalStorage();
     }
 
-    // استخراج وتنظيم بيانات الكتب النظيفة تماماً من النص المدخل
+    // استخراج وتنظيم البيانات فقط من النص المدخل
     function parseMessyData(rawText, startingIndex = 1) {
         if (!rawText || !rawText.trim()) return [];
 
@@ -248,7 +275,7 @@
                     isbn13: '',
                     pages: '',
                     bookSize: '',
-                    language: 'العربية',
+                    language: '',
                     materialType: 'كتاب مطبوع',
                     category: '',
                     subject: '',
