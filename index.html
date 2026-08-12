@@ -36,6 +36,7 @@
         .badge { background: #dbeafe; color: #1e40af; padding: 3px 8px; border-radius: 30px; font-size: 11px; font-weight: bold; }
         .status-badge { background: #fef3c7; color: #92400e; padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: bold; display: inline-flex; align-items: center; gap: 5px; }
         .status-online { background: #d1fae5; color: #065f46; }
+        .status-local { background: #e0f2fe; color: #0369a1; }
         .toast { position: fixed; bottom: 30px; left: 30px; background: #0f172a; color: white; padding: 12px 24px; border-radius: 12px; font-weight: 700; display: none; z-index: 999; }
         .section-tag { background: #e0e7ff; color: #3730a3; padding: 4px 12px; border-radius: 6px; font-size: 12px; font-weight: bold; margin-bottom: 10px; display: inline-block; }
         footer { margin-top: 25px; text-align: center; padding: 15px; border-top: 1px solid #e2e8f0; color: #64748b; font-size: 13px; font-weight: 700; }
@@ -45,17 +46,17 @@
 <div class="container">
     <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
         <h1>📚 <span>نظام الفهرسة التلقائي</span> وتصدير متقدم لـ Excel</h1>
-        <div id="dbStatus" class="status-badge">🔄 جاري الاتصال الآمن بـ Firebase...</div>
+        <div id="dbStatus" class="status-badge">🔄 جاري الاتصال...</div>
     </div>
-    <p>قم بلصق بيانات الكتب لإضافتها للسجل التراكمي المحفوظ سحابياً.</p>
+    <p>قم بلصق بيانات الكتب لإضافتها للسجل التراكمي المحفوظ.</p>
 
     <div class="flex">
         <button class="btn btn-outline" id="loadSampleBtn">📋 تحميل نموذج بيانات</button>
         <button class="btn btn-success" id="exportExcelBtn">📊 تصدير ملف Excel (3 شيتات)</button>
-        <button class="btn btn-danger" id="clearBtn">🗑️ مسح البيانات المخزنة سحابياً</button>
+        <button class="btn btn-danger" id="clearBtn">🗑️ مسح البيانات المخزنة بالكامل</button>
     </div>
 
-    <textarea id="inputText" placeholder="الصق النص هنا للأضافة على السجل الحالي..."></textarea>
+    <textarea id="inputText" placeholder="الصق النص هنا للإضافة على السجل الحالي..."></textarea>
     
     <div style="margin: 15px 0;" class="flex">
         <button class="btn btn-primary" id="extractBtn">➕ إضافة البيانات للسجل المحفوظ</button>
@@ -82,7 +83,7 @@
                 </tr>
             </thead>
             <tbody id="tableBody">
-                <tr><td colspan="12" style="text-align:center;color:#94a3b8;padding:30px;">🔄 جاري مزامنة البيانات...</td></tr>
+                <tr><td colspan="12" style="text-align:center;color:#94a3b8;padding:30px;">🔄 جاري تحميل البيانات...</td></tr>
             </tbody>
         </table>
     </div>
@@ -94,11 +95,13 @@
 
 <div class="toast" id="toast"></div>
 
-<!-- مكتبات Firebase CDN (Modular Version 10) -->
+<!-- مكتبة Excel -->
+<script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
+
+<!-- Firebase SDKs -->
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
     import { getDatabase, ref, set, onValue, remove } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
-    import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
     const firebaseConfig = {
         apiKey: "AIzaSyDLTeUEevqflU1l5Djm4ymmAURg_Zkwwrw",
@@ -111,10 +114,10 @@
         measurementId: "G-B8DZ51EEWQ"
     };
 
-    const app = initializeApp(firebaseConfig);
-    const db = getDatabase(app);
-    const auth = getAuth(app);
-    const booksRef = ref(db, 'library_books');
+    let db = null;
+    let booksRef = null;
+    let isFirebaseConnected = false;
+    let globalBooks = [];
 
     const inputText = document.getElementById('inputText');
     const tableBody = document.getElementById('tableBody');
@@ -125,8 +128,6 @@
     const recordCount = document.getElementById('recordCount');
     const toast = document.getElementById('toast');
     const dbStatus = document.getElementById('dbStatus');
-
-    let globalBooks = [];
 
     function showToast(msg, duration = 3000) {
         toast.innerText = msg;
@@ -141,33 +142,53 @@
         return now.toLocaleDateString('ar-EG', options);
     }
 
-    // تسجيل الدخول المجهول التلقائي لتجاوز حظر الأمان
-    signInAnonymously(auth).catch((error) => {
-        dbStatus.className = "status-badge";
-        dbStatus.innerHTML = "🔴 خطأ في المصادقة: قم بتفعيل Anonymous في Firebase";
-        console.error("Auth error:", error);
-    });
-
-    onAuthStateChanged(auth, (user) => {
-        if (user) {
-            // الاستماع المتزامن مع السحابة فور نجاح الاتصال المصرح
-            onValue(booksRef, (snapshot) => {
-                const data = snapshot.val();
-                if (data) {
-                    globalBooks = Array.isArray(data) ? data : Object.values(data);
-                } else {
-                    globalBooks = [];
-                }
-                renderTable(globalBooks);
-                dbStatus.className = "status-badge status-online";
-                dbStatus.innerHTML = "🟢 متصل وآمن (Firebase)";
-            }, (error) => {
-                dbStatus.className = "status-badge";
-                dbStatus.innerHTML = "🔴 خطأ بالصلاحيات (تأكد من Rules)";
-                showToast("⚠️ خطأ في القواعد: " + error.message);
-            });
+    // تحميل من التخزين المحلي كخيار احتياطي ممتاز
+    function loadFromLocalStorage() {
+        const localData = localStorage.getItem('tidybooks_data');
+        if (localData) {
+            try {
+                globalBooks = JSON.parse(localData);
+            } catch(e) { globalBooks = []; }
         }
-    });
+        renderTable(globalBooks);
+    }
+
+    function saveToLocalStorage(data) {
+        localStorage.setItem('tidybooks_data', JSON.stringify(data));
+    }
+
+    // تهيئة السحابة مع معالجة الأخطاء السلسة
+    try {
+        const app = initializeApp(firebaseConfig);
+        db = getDatabase(app);
+        booksRef = ref(db, 'library_books');
+
+        onValue(booksRef, (snapshot) => {
+            isFirebaseConnected = true;
+            const data = snapshot.val();
+            if (data) {
+                globalBooks = Array.isArray(data) ? data : Object.values(data);
+            } else {
+                globalBooks = [];
+            }
+            saveToLocalStorage(globalBooks);
+            renderTable(globalBooks);
+            dbStatus.className = "status-badge status-online";
+            dbStatus.innerHTML = "🟢 متصل بالسحابة (Firebase)";
+        }, (error) => {
+            console.warn("Firebase fallback:", error);
+            isFirebaseConnected = false;
+            dbStatus.className = "status-badge status-local";
+            dbStatus.innerHTML = "💾 وضع الحفظ المحلي (يعمل بدون انقطاع)";
+            loadFromLocalStorage();
+        });
+    } catch (err) {
+        console.warn("Initialization Error:", err);
+        isFirebaseConnected = false;
+        dbStatus.className = "status-badge status-local";
+        dbStatus.innerHTML = "💾 وضع الحفظ المحلي (يعمل بدون انقطاع)";
+        loadFromLocalStorage();
+    }
 
     function parseMessyData(rawText, startingIndex = 1) {
         if (!rawText || !rawText.trim()) return [];
@@ -313,23 +334,40 @@
 
         if (parsedNewBooks.length > 0) {
             const updatedList = [...globalBooks, ...parsedNewBooks];
-            set(booksRef, updatedList).then(() => {
+            
+            if (isFirebaseConnected && booksRef) {
+                set(booksRef, updatedList).then(() => {
+                    inputText.value = '';
+                    showToast(`✅ تم إضافة ${parsedNewBooks.length} كتاب بنجاح للسجل السحابي`);
+                }).catch(() => {
+                    saveToLocalStorage(updatedList);
+                    globalBooks = updatedList;
+                    renderTable(globalBooks);
+                    inputText.value = '';
+                    showToast(`✅ تم حفظ ${parsedNewBooks.length} كتاب على الجهاز محلياً`);
+                });
+            } else {
+                saveToLocalStorage(updatedList);
+                globalBooks = updatedList;
+                renderTable(globalBooks);
                 inputText.value = '';
-                showToast(`✅ تم إضافة ${parsedNewBooks.length} كتاب بنجاح للسجل السحابي`);
-            }).catch((err) => {
-                showToast('❌ فشل الحفظ السحابي: ' + err.message);
-            });
+                showToast(`✅ تم حفظ ${parsedNewBooks.length} كتاب على الجهاز محلياً`);
+            }
         } else {
             showToast('⚠️ لم يتم التعرف على بيانات كتب جديدة صالحة');
         }
     });
 
     clearBtn.addEventListener('click', () => {
-        if (confirm("هل أنت تأكد من مسح جميع البيانات المخزنة سحابياً؟ لا يمكن التراجع عن ذلك!")) {
-            remove(booksRef).then(() => {
-                inputText.value = '';
-                showToast('🗑️ تم مسح السجل المخزن سحابياً بنجاح');
-            });
+        if (confirm("هل أنت تأكد من مسح جميع البيانات المخزنة بالكامل؟")) {
+            if (isFirebaseConnected && booksRef) {
+                remove(booksRef);
+            }
+            localStorage.removeItem('tidybooks_data');
+            globalBooks = [];
+            renderTable([]);
+            inputText.value = '';
+            showToast('🗑️ تم مسح السجل المخزن بنجاح');
         }
     });
 
@@ -438,7 +476,5 @@
         showToast('📊 تم تصدير السجل المحفوظ كاملاً بنجاح');
     });
 </script>
-
-<script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
 </body>
 </html>
