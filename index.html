@@ -59,7 +59,7 @@
         <h1>📚 <span>نظام الفهرسة التلقائي</span> وتصدير متقدم لـ Excel</h1>
         <div id="dbStatus" class="status-badge">🔄 جاري الاتصال والمصادقة...</div>
     </div>
-    <p>قم بلصق بيانات الكتب الحقيقية ليتم تنظيمها في صفوف متكاملة وحفظها مباشرة.</p>
+    <p>قم بلصق بيانات الكتب ليتم توزيع حقول كل كتاب أفقيًا جنبًا إلى جنب في صف واحد مطابق لأعمدة ملف Excel.</p>
 
     <div class="flex">
         <button class="btn btn-outline" id="organizeBtn">✨ تنظيم وإضافة النص المدخل</button>
@@ -76,7 +76,7 @@
         <button class="btn btn-warning" id="deleteSingleBtn">🗑️ مسح الكتاب المحدد</button>
     </div>
 
-    <textarea id="inputText" placeholder="الصق نص بيانات الكتب هنا للتحليل والتنظيم في صف واحد..."></textarea>
+    <textarea id="inputText" placeholder="الصق نص بيانات الكتب هنا (مثال: اسم الكتاب | المؤلف | دار النشر | مكان النشر | الطبعة | سنة النشر...)"></textarea>
     
     <div style="margin: 15px 0;" class="flex">
         <button class="btn btn-primary" id="extractBtn">➕ تنظيم وتنفيذ الإضافة</button>
@@ -91,19 +91,28 @@
                     <th>م</th>
                     <th>رقم الجرد</th>
                     <th>اسم الكتاب</th>
+                    <th>العنوان الفرعي</th>
                     <th>المؤلف</th>
+                    <th>المترجم</th>
+                    <th>المحقق</th>
+                    <th>المحرر</th>
                     <th>دار النشر</th>
                     <th>مكان النشر</th>
                     <th>الطبعة</th>
                     <th>سنة النشر</th>
+                    <th>ISBN-10</th>
                     <th>ISBN-13</th>
+                    <th>عدد الصفحات</th>
+                    <th>حجم الكتاب</th>
+                    <th>اللغة</th>
+                    <th>نوع المادة</th>
                     <th>التصنيف</th>
-                    <th>الصفحات</th>
+                    <th>الموضوع</th>
                     <th>حالة الاستعارة</th>
                 </tr>
             </thead>
             <tbody id="tableBody">
-                <tr><td colspan="12" style="text-align:center;color:#94a3b8;padding:30px;">🔄 جاري تحميل البيانات...</td></tr>
+                <tr><td colspan="21" style="text-align:center;color:#94a3b8;padding:30px;">🔄 جاري تحميل البيانات...</td></tr>
             </tbody>
         </table>
     </div>
@@ -297,13 +306,11 @@
         }
     });
 
-    // تنظيم النص المدخل وتحويله إلى صف كامل مقسم طبقاً للعناوين
+    // تحليلي وتنظيمي للأفقي الموازني مع عناوين Excel
     function parseMessyData(rawText, startingIndex = 1) {
         if (!rawText || !rawText.trim()) return [];
 
         const todayStr = new Date().toISOString().split('T')[0];
-        
-        // تقسيم النص حسب الأسطر أولاً للتعامل مع الإدخال كسطر لكل كتاب أو نص مفصل
         const lines = rawText.split('\n').map(l => l.trim()).filter(l => l.length > 0);
         let newBooks = [];
         let counter = startingIndex;
@@ -364,30 +371,44 @@
                 trustDegree: 'عالية (100%)'
             };
 
-            // فصل الأجزاء بحسب علامات الفصل الشائعة (|, -، —، \t)
-            let parts = line.split(/[|—–\t]/).map(p => p.trim()).filter(p => p.length > 0);
+            // فصل حقول الكتاب الموجودة على السطر/الصف الواحد حسب العوامل الفاصلة
+            let parts = line.split(/[|—–\t,،]/).map(p => p.trim()).filter(p => p.length > 0);
 
             if (parts.length > 0) {
                 parts.forEach((part, idx) => {
-                    if (part.includes('دار النشر:') || part.includes('الناشر:')) {
-                        book.publisher = part.replace(/(دار النشر|الناشر):\s*/g, '').trim();
-                    } else if (part.includes('الطبعة:') || part.includes('طبعة:')) {
-                        book.edition = part.replace(/(الطبعة|طبعة):\s*/g, '').trim();
+                    const lowerPart = part.toLowerCase();
+                    
+                    if (part.includes('اسم الكتاب:') || part.includes('العنوان:')) {
+                        book.title = part.replace(/(اسم الكتاب|العنوان):\s*/g, '').trim();
                     } else if (part.includes('المؤلف:') || part.includes('تأليف:')) {
                         book.author = part.replace(/(المؤلف|تأليف):\s*/g, '').trim();
                         book.fullNameAuthors = book.author;
+                    } else if (part.includes('العنوان الفرعي:')) {
+                        book.subtitle = part.replace(/العنوان الفرعي:\s*/g, '').trim();
                     } else if (part.includes('المترجم:') || part.includes('ترجمة:')) {
                         book.translator = part.replace(/(المترجم|ترجمة):\s*/g, '').trim();
+                    } else if (part.includes('المحقق:') || part.includes('تحقيق:')) {
+                        book.investigator = part.replace(/(المحقق|تحقيق):\s*/g, '').trim();
+                    } else if (part.includes('المحرر:')) {
+                        book.editor = part.replace(/المحرر:\s*/g, '').trim();
+                    } else if (part.includes('دار النشر:') || part.includes('الناشر:')) {
+                        book.publisher = part.replace(/(دار النشر|الناشر):\s*/g, '').trim();
                     } else if (part.includes('مكان النشر:') || part.includes('بلد النشر:')) {
                         book.publicationPlace = part.replace(/(مكان النشر|بلد النشر):\s*/g, '').trim();
+                    } else if (part.includes('الطبعة:') || part.includes('طبعة:')) {
+                        book.edition = part.replace(/(الطبعة|طبعة):\s*/g, '').trim();
                     } else if (part.includes('سنة النشر:') || part.includes('سنة:')) {
                         book.publishYear = part.replace(/(سنة النشر|سنة):\s*/g, '').trim();
-                    } else if (part.includes('التصنيف:')) {
-                        book.category = part.replace(/التصنيف:\s*/g, '').trim();
+                    } else if (part.includes('ISBN') || part.includes('الردمك:')) {
+                        book.isbn13 = part.replace(/(ISBN-13|ISBN|الردمك):\s*/g, '').trim();
                     } else if (part.includes('الصفحات:') || part.includes('عدد الصفحات:')) {
                         book.pages = part.replace(/(الصفحات|عدد الصفحات):\s*/g, '').trim();
+                    } else if (part.includes('التصنيف:')) {
+                        book.category = part.replace(/التصنيف:\s*/g, '').trim();
+                    } else if (part.includes('الموضوع:')) {
+                        book.subject = part.replace(/الموضوع:\s*/g, '').trim();
                     } else {
-                        // إسناد تلقائي موزع بناءً على موقعه إذا لم يكن معنوناً
+                        // التوزيع الأفق التلقائي حسب الترتيب إذا لم توجد الكلمات المفتاحية
                         if (idx === 0 && !book.title) {
                             book.title = part.replace(/^\d+[\.\-]\s*/, '').trim();
                         } else if (idx === 1 && !book.author) {
@@ -399,6 +420,8 @@
                             book.publicationPlace = part.trim();
                         } else if (idx === 4 && !book.edition) {
                             book.edition = part.trim();
+                        } else if (idx === 5 && !book.publishYear) {
+                            book.publishYear = part.trim();
                         }
                     }
                 });
@@ -414,7 +437,7 @@
 
     function renderTable(books) {
         if (!books || books.length === 0) {
-            tableBody.innerHTML = `<tr><td colspan="12" style="text-align:center;color:#94a3b8;padding:30px;">📭 السجل فارغ حالياً. قم بلصق نص البيانات لإضافتها وتنظيمها.</td></tr>`;
+            tableBody.innerHTML = `<tr><td colspan="21" style="text-align:center;color:#94a3b8;padding:30px;">📭 السجل فارغ حالياً. قم بلصق نص البيانات لإضافتها وتنظيمها.</td></tr>`;
             recordCount.innerText = 'إجمالي الكتب: 0';
             return;
         }
@@ -425,14 +448,23 @@
                 <td><strong>${b.seqNo || (idx + 1)}</strong></td>
                 <td><span class="badge">${b.inventoryNo}</span></td>
                 <td><strong>${b.title || '—'}</strong></td>
+                <td>${b.subtitle || '—'}</td>
                 <td>${b.author || '—'}</td>
+                <td>${b.translator || '—'}</td>
+                <td>${b.investigator || '—'}</td>
+                <td>${b.editor || '—'}</td>
                 <td>${b.publisher || '—'}</td>
                 <td>${b.publicationPlace || '—'}</td>
                 <td>${b.edition || '—'}</td>
                 <td>${b.publishYear || '—'}</td>
+                <td>${b.isbn10 || '—'}</td>
                 <td>${b.isbn13 || '—'}</td>
-                <td>${b.category || '—'}</td>
                 <td>${b.pages ? b.pages + ' ص' : '—'}</td>
+                <td>${b.bookSize || '—'}</td>
+                <td>${b.language || '—'}</td>
+                <td>${b.materialType || '—'}</td>
+                <td>${b.category || '—'}</td>
+                <td>${b.subject || '—'}</td>
                 <td><span style="color: #16a34a; font-weight:bold;">${b.status}</span></td>
             </tr>`;
         });
@@ -457,7 +489,7 @@
             if (isFirebaseConnected && booksRef) {
                 set(booksRef, updatedList).then(() => {
                     inputText.value = '';
-                    showToast(`✨ تم تنظيم وإضافة ${parsedNewBooks.length} كتاب جديد بنجاح في صفوف مقسمة`);
+                    showToast(`✨ تم تنظيم وإضافة ${parsedNewBooks.length} كتاب بنجاح أفقيًا في صفوف متناسقة`);
                 }).catch(() => {
                     saveToLocalStorage(updatedList);
                     globalBooks = updatedList;
