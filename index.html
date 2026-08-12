@@ -45,7 +45,7 @@
 <div class="container">
     <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
         <h1>📚 <span>نظام الفهرسة التلقائي</span> وتصدير متقدم لـ Excel</h1>
-        <div id="dbStatus" class="status-badge">🔄 جاري الاتصال بقاعدة البيانات...</div>
+        <div id="dbStatus" class="status-badge">🔄 جاري الاتصال الآمن بـ Firebase...</div>
     </div>
     <p>قم بلصق بيانات الكتب لإضافتها للسجل التراكمي المحفوظ سحابياً.</p>
 
@@ -98,8 +98,8 @@
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
     import { getDatabase, ref, set, onValue, remove } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+    import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
-    // إعدادات Firebase الخاصة بك
     const firebaseConfig = {
         apiKey: "AIzaSyDLTeUEevqflU1l5Djm4ymmAURg_Zkwwrw",
         authDomain: "mohamedredalibarary.firebaseapp.com",
@@ -111,12 +111,11 @@
         measurementId: "G-B8DZ51EEWQ"
     };
 
-    // تهيئة السحابة
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
+    const auth = getAuth(app);
     const booksRef = ref(db, 'library_books');
 
-    // عناصر الصفحة
     const inputText = document.getElementById('inputText');
     const tableBody = document.getElementById('tableBody');
     const extractBtn = document.getElementById('extractBtn');
@@ -142,21 +141,32 @@
         return now.toLocaleDateString('ar-EG', options);
     }
 
-    // الاستماع المتزامن مع السحابة (Firebase)
-    onValue(booksRef, (snapshot) => {
-        const data = snapshot.val();
-        if (data) {
-            globalBooks = Array.isArray(data) ? data : Object.values(data);
-        } else {
-            globalBooks = [];
-        }
-        renderTable(globalBooks);
-        dbStatus.className = "status-badge status-online";
-        dbStatus.innerHTML = "🟢 متصل بالسحابة (Firebase)";
-    }, (error) => {
+    // تسجيل الدخول المجهول التلقائي لتجاوز حظر الأمان
+    signInAnonymously(auth).catch((error) => {
         dbStatus.className = "status-badge";
-        dbStatus.innerHTML = "🔴 خطأ في الاتصال";
-        showToast("⚠️ حدث خطأ في مزامنة البيانات: " + error.message);
+        dbStatus.innerHTML = "🔴 خطأ في المصادقة: قم بتفعيل Anonymous في Firebase";
+        console.error("Auth error:", error);
+    });
+
+    onAuthStateChanged(auth, (user) => {
+        if (user) {
+            // الاستماع المتزامن مع السحابة فور نجاح الاتصال المصرح
+            onValue(booksRef, (snapshot) => {
+                const data = snapshot.val();
+                if (data) {
+                    globalBooks = Array.isArray(data) ? data : Object.values(data);
+                } else {
+                    globalBooks = [];
+                }
+                renderTable(globalBooks);
+                dbStatus.className = "status-badge status-online";
+                dbStatus.innerHTML = "🟢 متصل وآمن (Firebase)";
+            }, (error) => {
+                dbStatus.className = "status-badge";
+                dbStatus.innerHTML = "🔴 خطأ بالصلاحيات (تأكد من Rules)";
+                showToast("⚠️ خطأ في القواعد: " + error.message);
+            });
+        }
     });
 
     function parseMessyData(rawText, startingIndex = 1) {
@@ -221,7 +231,6 @@
                     seriesName: '',
                     seriesNo: '',
 
-                    // بيانات النسخة
                     copyNo: '1',
                     classNo: '810.4',
                     shelfNo: 'A-' + Math.floor(1 + Math.random() * 20),
@@ -236,7 +245,6 @@
                     notes: 'نسخة ممتازة ومجلدة',
                     coverImage: '',
 
-                    // بيانات الفهرسة الإلكترونية
                     originalTitle: '',
                     coverTitle: '',
                     fullNameAuthors: '',
@@ -293,7 +301,6 @@
         recordCount.innerText = `إجمالي الكتب المحفوظة: ${books.length}`;
     }
 
-    // إضافة البيانات ودمجها بالسجل السحابي
     extractBtn.addEventListener('click', () => {
         const raw = inputText.value;
         if (!raw.trim()) {
@@ -317,7 +324,6 @@
         }
     });
 
-    // مسح السجل المخزن بالكامل من Firebase
     clearBtn.addEventListener('click', () => {
         if (confirm("هل أنت تأكد من مسح جميع البيانات المخزنة سحابياً؟ لا يمكن التراجع عن ذلك!")) {
             remove(booksRef).then(() => {
@@ -332,7 +338,6 @@
         showToast('📋 تم تحميل نموذج التجربة في المربع');
     });
 
-    // تصدير ملف Excel الشامل
     exportExcelBtn.addEventListener('click', () => {
         if (globalBooks.length === 0) {
             showToast('⚠️ لا توجد بيانات محفوظة لتصديرها');
@@ -382,7 +387,6 @@
         const exportInfoRow = ['تاريخ التصدير:', exportDateStr];
         const copyrightRow = ['جميع الحقوق محفوظة © محمد رضا عوف ™'];
 
-        // شيت 1
         const headers1 = [
             'م', 'رقم الجرد', 'اسم الكتاب', 'العنوان الفرعي', 'المؤلف', 'المترجم', 'المحقق', 'المحرر',
             'دار النشر', 'مكان النشر', 'الطبعة', 'سنة النشر', 'ISBN-10', 'ISBN-13',
@@ -399,7 +403,6 @@
         applyStylesToSheet(ws1);
         XLSX.utils.book_append_sheet(wb, ws1, 'بيانات الكتاب الأساسية');
 
-        // شيت 2
         const headers2 = [
             'م', 'رقم الجرد', 'اسم الكتاب', 'رقم النسخة', 'رقم التصنيف', 'رقم الرف', 'القسم', 'موقع الكتاب',
             'حالة الكتاب', 'عدد النسخ', 'تاريخ الاقتناء', 'مصدر الاقتناء', 'سعر الشراء',
@@ -414,7 +417,6 @@
         applyStylesToSheet(ws2);
         XLSX.utils.book_append_sheet(wb, ws2, 'بيانات النسخة بالمكتبة');
 
-        // شيت 3
         const headers3 = [
             'م', 'رقم الجرد', 'اسم الكتاب', 'العنوان الأصلي', 'عنوان الغلاف', 'أسماء المؤلفين كاملة',
             'اسم الشهرة للمؤلف', 'جهة التأليف', 'الكلمات المفتاحية', 'ملخص الكتاب',
