@@ -12,7 +12,15 @@
         h1 { color: #0f172a; margin-bottom: 8px; font-size: 24px; }
         h1 span { color: #2563eb; }
         p { color: #475569; margin-bottom: 20px; font-size: 14px; }
-        textarea { width: 100%; min-height: 140px; padding: 12px; border: 1.5px solid #cbd5e1; border-radius: 12px; font-family: 'Tajawal', sans-serif; font-size: 13.5px; background: #f8fafc; resize: vertical; }
+        textarea { width: 100%; min-height: 120px; padding: 12px; border: 1.5px solid #cbd5e1; border-radius: 12px; font-family: 'Tajawal', sans-serif; font-size: 13.5px; background: #f8fafc; resize: vertical; }
+        .input-field {
+            padding: 10px 14px; border: 1.5px solid #cbd5e1; border-radius: 10px; font-family: 'Tajawal', sans-serif;
+            font-size: 13.5px; outline: none; background: #fff;
+        }
+        .select-field {
+            padding: 10px 14px; border: 1.5px solid #cbd5e1; border-radius: 10px; font-family: 'Tajawal', sans-serif;
+            font-size: 13.5px; outline: none; background: #fff; max-width: 320px; flex: 1; cursor: pointer;
+        }
         .btn {
             padding: 10px 20px; border: none; border-radius: 50px; font-weight: 700; font-size: 13.5px;
             font-family: 'Tajawal', sans-serif; cursor: pointer; transition: 0.2s;
@@ -24,9 +32,12 @@
         .btn-success:hover { background: #15803d; }
         .btn-danger { background: #ef4444; color: white; }
         .btn-danger:hover { background: #dc2626; }
+        .btn-warning { background: #f59e0b; color: white; }
+        .btn-warning:hover { background: #d97706; }
         .btn-outline { background: #f1f5f9; border: 2px solid #cbd5e1; color: #334155; }
         .btn-outline:hover { background: #e2e8f0; }
         .flex { display: flex; gap: 10px; flex-wrap: wrap; margin: 15px 0; align-items: center; }
+        .card-box { background: #f8fafc; padding: 15px; border-radius: 12px; border: 1px solid #e2e8f0; margin-bottom: 15px; }
         .table-wrapper { overflow-x: auto; margin: 15px 0; border-radius: 12px; border: 1px solid #e2e8f0; max-height: 500px; }
         table { width: 100%; border-collapse: collapse; font-size: 13px; white-space: nowrap; }
         th { background: #1e3a8a; color: white; font-weight: 700; padding: 12px 10px; text-align: right; border-bottom: 2px solid #cbd5e1; position: sticky; top: 0; z-index: 10; }
@@ -54,6 +65,15 @@
         <button class="btn btn-outline" id="organizeBtn">✨ تنظيم وإضافة النص المدخل</button>
         <button class="btn btn-success" id="exportExcelBtn">📊 تصدير ملف Excel (3 شيتات)</button>
         <button class="btn btn-danger" id="clearBtn">🗑️ مسح البيانات المخزنة بالكامل</button>
+    </div>
+
+    <!-- قسم مسح كتاب محدد والبحث -->
+    <div class="card-box flex">
+        <input type="text" id="searchBookInput" class="input-field" placeholder="🔍 ابحث عن اسم الكتاب هنا..." style="flex: 1; min-width: 200px;">
+        <select id="bookSelectDropdown" class="select-field">
+            <option value="">اختر كتاباً لحذفه...</option>
+        </select>
+        <button class="btn btn-warning" id="deleteSingleBtn">🗑️ مسح الكتاب المحدد</button>
     </div>
 
     <textarea id="inputText" placeholder="الصق نص بيانات الكتب هنا للتحليل والتنظيم..."></textarea>
@@ -130,6 +150,10 @@
     const toast = document.getElementById('toast');
     const dbStatus = document.getElementById('dbStatus');
 
+    const searchBookInput = document.getElementById('searchBookInput');
+    const bookSelectDropdown = document.getElementById('bookSelectDropdown');
+    const deleteSingleBtn = document.getElementById('deleteSingleBtn');
+
     function showToast(msg, duration = 3000) {
         toast.innerText = msg;
         toast.style.display = 'block';
@@ -143,7 +167,6 @@
         return now.toLocaleDateString('ar-EG', options);
     }
 
-    // دالة فلترة وتطهير البيانات من الإدخالات القديمة أو النماذج الوهمية
     function cleanOldTrashData(booksList) {
         if (!Array.isArray(booksList)) return [];
         return booksList.filter(b => {
@@ -152,7 +175,6 @@
             const author = (b.author || '').toString();
             const translator = (b.translator || '').toString();
 
-            // استبعاد أي سجل يحتوي على رنا الصيفي أو بيانات تجريبية قديمة
             if (title.includes('رنا الصيفي') || author.includes('رنا الصيفي') || translator.includes('رنا الصيفي')) {
                 return false;
             }
@@ -170,6 +192,7 @@
             } catch(e) { globalBooks = []; }
         }
         renderTable(globalBooks);
+        updateDropdownOptions(globalBooks);
     }
 
     function saveToLocalStorage(data) {
@@ -195,15 +218,15 @@
                     const data = snapshot.val();
                     let rawList = data ? (Array.isArray(data) ? data : Object.values(data)) : [];
                     
-                    // تنظيف البيانات القادمة من Firebase تلقائياً
                     let cleanedList = cleanOldTrashData(rawList);
                     if (cleanedList.length !== rawList.length) {
-                        set(booksRef, cleanedList); // تحديث السيرفر بالبيانات النظيفة
+                        set(booksRef, cleanedList);
                     }
 
                     globalBooks = cleanedList;
                     saveToLocalStorage(globalBooks);
                     renderTable(globalBooks);
+                    updateDropdownOptions(globalBooks);
                     dbStatus.className = "status-badge status-online";
                     dbStatus.innerHTML = "🟢 متصل بالسحابة (Firebase)";
                 }, (error) => {
@@ -221,7 +244,62 @@
         loadFromLocalStorage();
     }
 
-    // استخراج وتنظيم البيانات فقط من النص المدخل
+    // تحديث القائمة المنسدلة بناءً على تصفية البحث
+    function updateDropdownOptions(books) {
+        const query = (searchBookInput.value || '').trim().toLowerCase();
+        bookSelectDropdown.innerHTML = '<option value="">اختر كتاباً لحذفه...</option>';
+
+        const filtered = books.filter(b => {
+            if (!query) return true;
+            const t = (b.title || '').toLowerCase();
+            const inv = (b.inventoryNo || '').toLowerCase();
+            const a = (b.author || '').toLowerCase();
+            return t.includes(query) || inv.includes(query) || a.includes(query);
+        });
+
+        filtered.forEach((b, index) => {
+            const opt = document.createElement('option');
+            opt.value = b.inventoryNo || index;
+            opt.innerText = `${b.inventoryNo ? '[' + b.inventoryNo + '] ' : ''}${b.title || 'بدون عنوان'}`;
+            bookSelectDropdown.appendChild(opt);
+        });
+    }
+
+    searchBookInput.addEventListener('input', () => {
+        updateDropdownOptions(globalBooks);
+    });
+
+    // حذف كتاب محدد فردياً
+    deleteSingleBtn.addEventListener('click', () => {
+        const selectedVal = bookSelectDropdown.value;
+        if (!selectedVal) {
+            showToast('⚠️ يرجى اختيار كتاب أولاً من القائمة المنسدلة لحذفه');
+            return;
+        }
+
+        const targetBook = globalBooks.find(b => (b.inventoryNo === selectedVal || b.seqNo == selectedVal));
+        const bookName = targetBook ? targetBook.title : 'هذا الكتاب';
+
+        if (confirm(`هل أنت تأكد من حذف "${bookName}" فقط من السجل؟`)) {
+            const updatedList = globalBooks.filter(b => b.inventoryNo !== selectedVal && b.seqNo != selectedVal);
+
+            // إعادة ترقيم السلسلة
+            updatedList.forEach((b, idx) => b.seqNo = idx + 1);
+
+            if (isFirebaseConnected && booksRef) {
+                set(booksRef, updatedList).then(() => {
+                    showToast(`🗑️ تم حذف كتاب "${bookName}" بنجاح`);
+                });
+            } else {
+                saveToLocalStorage(updatedList);
+                globalBooks = updatedList;
+                renderTable(globalBooks);
+                updateDropdownOptions(globalBooks);
+                showToast(`🗑️ تم حذف كتاب "${bookName}" بنجاح`);
+            }
+        }
+    });
+
     function parseMessyData(rawText, startingIndex = 1) {
         if (!rawText || !rawText.trim()) return [];
 
@@ -375,6 +453,7 @@
                     saveToLocalStorage(updatedList);
                     globalBooks = updatedList;
                     renderTable(globalBooks);
+                    updateDropdownOptions(globalBooks);
                     inputText.value = '';
                     showToast(`✨ تم تنظيم وإضافة ${parsedNewBooks.length} كتاب جديد محلياً`);
                 });
@@ -382,6 +461,7 @@
                 saveToLocalStorage(updatedList);
                 globalBooks = updatedList;
                 renderTable(globalBooks);
+                updateDropdownOptions(globalBooks);
                 inputText.value = '';
                 showToast(`✨ تم تنظيم وإضافة ${parsedNewBooks.length} كتاب جديد محلياً`);
             }
@@ -401,6 +481,7 @@
             localStorage.removeItem('tidybooks_data');
             globalBooks = [];
             renderTable([]);
+            updateDropdownOptions([]);
             inputText.value = '';
             showToast('🗑️ تم مسح السجل المخزن بنجاح');
         }
