@@ -8,12 +8,11 @@
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { font-family: 'Tajawal', sans-serif; background: #f0f4f8; padding: 20px; color: #1e293b; }
-        .container { max-width: 1250px; margin: 0 auto; background: white; padding: 25px; border-radius: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+        .container { max-width: 1200px; margin: 0 auto; background: white; padding: 25px; border-radius: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
         h1 { color: #0f172a; margin-bottom: 8px; font-size: 24px; }
         h1 span { color: #2563eb; }
         p { color: #475569; margin-bottom: 20px; font-size: 14px; }
-        textarea { width: 100%; min-height: 160px; padding: 14px; border: 1.5px solid #cbd5e1; border-radius: 12px; font-family: 'Tajawal', sans-serif; font-size: 13.5px; background: #f8fafc; resize: vertical; line-height: 1.6; }
-        textarea:focus { border-color: #2563eb; outline: none; background: #fff; }
+        textarea { width: 100%; min-height: 120px; padding: 12px; border: 1.5px solid #cbd5e1; border-radius: 12px; font-family: 'Tajawal', sans-serif; font-size: 13.5px; background: #f8fafc; resize: vertical; }
         .input-field {
             padding: 10px 14px; border: 1.5px solid #cbd5e1; border-radius: 10px; font-family: 'Tajawal', sans-serif;
             font-size: 13.5px; outline: none; background: #fff;
@@ -23,9 +22,9 @@
             font-size: 13.5px; outline: none; background: #fff; max-width: 320px; flex: 1; cursor: pointer;
         }
         .btn {
-            padding: 11px 22px; border: none; border-radius: 50px; font-weight: 700; font-size: 13.5px;
-            font-family: 'Tajawal', sans-serif; cursor: pointer; transition: all 0.2s ease-in-out;
-            display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+            padding: 10px 20px; border: none; border-radius: 50px; font-weight: 700; font-size: 13.5px;
+            font-family: 'Tajawal', sans-serif; cursor: pointer; transition: 0.2s;
+            display: inline-flex; align-items: center; gap: 8px;
         }
         .btn-primary { background: #2563eb; color: white; }
         .btn-primary:hover { background: #1d4ed8; }
@@ -35,17 +34,21 @@
         .btn-danger:hover { background: #dc2626; }
         .btn-warning { background: #f59e0b; color: white; }
         .btn-warning:hover { background: #d97706; }
+        .btn-outline { background: #f1f5f9; border: 2px solid #cbd5e1; color: #334155; }
+        .btn-outline:hover { background: #e2e8f0; }
         .flex { display: flex; gap: 10px; flex-wrap: wrap; margin: 15px 0; align-items: center; }
         .card-box { background: #f8fafc; padding: 15px; border-radius: 12px; border: 1px solid #e2e8f0; margin-bottom: 15px; }
-        .table-wrapper { overflow-x: auto; margin: 15px 0; border-radius: 12px; border: 1px solid #e2e8f0; max-height: 520px; }
+        .table-wrapper { overflow-x: auto; margin: 15px 0; border-radius: 12px; border: 1px solid #e2e8f0; max-height: 500px; }
         table { width: 100%; border-collapse: collapse; font-size: 13px; white-space: nowrap; }
         th { background: #1e3a8a; color: white; font-weight: 700; padding: 12px 10px; text-align: right; border-bottom: 2px solid #cbd5e1; position: sticky; top: 0; z-index: 10; }
         td { padding: 10px; border-bottom: 1px solid #e2e8f0; }
         tr:nth-child(even) { background: #f8fafc; }
         tr:hover { background: #f1f5f9; }
         .badge { background: #dbeafe; color: #1e40af; padding: 3px 8px; border-radius: 30px; font-size: 11px; font-weight: bold; }
-        .status-badge { background: #e0f2fe; color: #0369a1; padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: bold; display: inline-flex; align-items: center; gap: 5px; }
-        .toast { position: fixed; bottom: 30px; left: 30px; background: #0f172a; color: white; padding: 12px 24px; border-radius: 12px; font-weight: 700; display: none; z-index: 999; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
+        .status-badge { background: #fef3c7; color: #92400e; padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: bold; display: inline-flex; align-items: center; gap: 5px; }
+        .status-online { background: #d1fae5; color: #065f46; }
+        .status-local { background: #e0f2fe; color: #0369a1; }
+        .toast { position: fixed; bottom: 30px; left: 30px; background: #0f172a; color: white; padding: 12px 24px; border-radius: 12px; font-weight: 700; display: none; z-index: 999; }
         .section-tag { background: #e0e7ff; color: #3730a3; padding: 4px 12px; border-radius: 6px; font-size: 12px; font-weight: bold; margin-bottom: 10px; display: inline-block; }
         footer { margin-top: 25px; text-align: center; padding: 15px; border-top: 1px solid #e2e8f0; color: #64748b; font-size: 13px; font-weight: 700; }
     </style>
@@ -53,32 +56,31 @@
 <body>
 <div class="container">
     <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
-        <h1>📚 <span>نظام الفهرسة والتصنيف الدقيق</span> - TidyBooks</h1>
-        <div id="dbStatus" class="status-badge">💾 وضع العمل المحلي والمحلي الآمن</div>
+        <h1>📚 <span>نظام الفهرسة التلقائي</span> وتصدير متقدم لـ Excel</h1>
+        <div id="dbStatus" class="status-badge">🔄 جاري الاتصال والمصادقة...</div>
     </div>
-    <p>قم بلصق كشف البيانات، ثم اضغط على زر التصحيح والتصنيف لوضع كل معلومة تحت مسمّاها الصحيح فوراً.</p>
+    <p>قم بلصق بيانات الكتب الحقيقية ليتم تنظيمها وحفظها في السجل المباشر.</p>
 
     <div class="flex">
-        <button class="btn btn-success" id="exportExcelBtn">📊 تصدير البيانات (CSV / Excel)</button>
+        <button class="btn btn-outline" id="organizeBtn">✨ تنظيم وإضافة النص المدخل</button>
+        <button class="btn btn-success" id="exportExcelBtn">📊 تصدير ملف Excel (3 شيتات)</button>
         <button class="btn btn-danger" id="clearBtn">🗑️ مسح البيانات المخزنة بالكامل</button>
     </div>
 
     <!-- قسم مسح كتاب محدد والبحث -->
     <div class="card-box flex">
-        <input type="text" id="searchBookInput" class="input-field" placeholder="🔍 ابحث عن اسم الكتاب أو رقم الجرد..." style="flex: 1; min-width: 200px;">
+        <input type="text" id="searchBookInput" class="input-field" placeholder="🔍 ابحث عن اسم الكتاب هنا..." style="flex: 1; min-width: 200px;">
         <select id="bookSelectDropdown" class="select-field">
             <option value="">اختر كتاباً لحذفه...</option>
         </select>
         <button class="btn btn-warning" id="deleteSingleBtn">🗑️ مسح الكتاب المحدد</button>
     </div>
 
-    <textarea id="inputText" placeholder="الصق نص كشف البيانات هنا... 
-مثال:
-اسم الكتاب: تفسير الجلالين | المؤلف: جلال الدين السيوطي | دار النشر: دار المعارف | سنة النشر: 2005 | عدد الصفحات: 600"></textarea>
+    <textarea id="inputText" placeholder="الصق نص بيانات الكتب هنا للتحليل والتنظيم..."></textarea>
     
     <div style="margin: 15px 0;" class="flex">
-        <button class="btn btn-primary" id="processDataBtn">🎯 تصحيح وتصنيف المعلومات طبقاً للكشف ووضعها تحت مسمياتها الصحيحة</button>
-        <span style="font-size:14px; color:#1e293b; font-weight:bold; margin-right: auto;" id="recordCount">إجمالي الكتب: 0</span>
+        <button class="btn btn-primary" id="extractBtn">➕ تنظيم وتنفيذ الإضافة</button>
+        <span style="font-size:14px; color:#1e293b; font-weight:bold;" id="recordCount">إجمالي الكتب: 0</span>
     </div>
 
     <div class="section-tag">المعاينة الفورية: الكتب المحفوظة بالسجل</div>
@@ -89,26 +91,19 @@
                     <th>م</th>
                     <th>رقم الجرد</th>
                     <th>اسم الكتاب</th>
-                    <th>العنوان الفرعي</th>
                     <th>المؤلف</th>
-                    <th>المترجم</th>
-                    <th>المحقق</th>
-                    <th>المحرر</th>
                     <th>دار النشر</th>
                     <th>مكان النشر</th>
                     <th>الطبعة</th>
                     <th>سنة النشر</th>
-                    <th>ISBN</th>
-                    <th>عدد الصفحات</th>
-                    <th>حجم الكتاب</th>
-                    <th>اللغة</th>
+                    <th>ISBN-13</th>
                     <th>التصنيف</th>
-                    <th>الموضوع</th>
+                    <th>الصفحات</th>
                     <th>حالة الاستعارة</th>
                 </tr>
             </thead>
             <tbody id="tableBody">
-                <tr><td colspan="19" style="text-align:center;color:#94a3b8;padding:30px;">📭 السجل فارغ حالياً. قم بلصق كشف البيانات واضغط زر التصحيح والتصنيف.</td></tr>
+                <tr><td colspan="12" style="text-align:center;color:#94a3b8;padding:30px;">🔄 جاري تحميل البيانات...</td></tr>
             </tbody>
         </table>
     </div>
@@ -120,47 +115,136 @@
 
 <div class="toast" id="toast"></div>
 
-<script>
+<!-- مكتبة Excel -->
+<script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
+
+<!-- Firebase SDKs -->
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+    import { getDatabase, ref, set, onValue, remove } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyDLTeUEevqflU1l5Djm4ymmAURg_Zkwwrw",
+        authDomain: "mohamedredalibarary.firebaseapp.com",
+        databaseURL: "https://mohamedredalibarary-default-rtdb.firebaseio.com",
+        projectId: "mohamedredalibarary",
+        storageBucket: "mohamedredalibarary.firebasestorage.app",
+        messagingSenderId: "513706857127",
+        appId: "1:513706857127:web:2a4d1ad319655459d1c182",
+        measurementId: "G-B8DZ51EEWQ"
+    };
+
+    let db = null;
+    let booksRef = null;
+    let isFirebaseConnected = false;
     let globalBooks = [];
 
     const inputText = document.getElementById('inputText');
     const tableBody = document.getElementById('tableBody');
-    const processDataBtn = document.getElementById('processDataBtn');
+    const extractBtn = document.getElementById('extractBtn');
+    const organizeBtn = document.getElementById('organizeBtn');
     const exportExcelBtn = document.getElementById('exportExcelBtn');
     const clearBtn = document.getElementById('clearBtn');
     const recordCount = document.getElementById('recordCount');
     const toast = document.getElementById('toast');
+    const dbStatus = document.getElementById('dbStatus');
 
     const searchBookInput = document.getElementById('searchBookInput');
     const bookSelectDropdown = document.getElementById('bookSelectDropdown');
     const deleteSingleBtn = document.getElementById('deleteSingleBtn');
 
-    function showToast(msg) {
+    function showToast(msg, duration = 3000) {
         toast.innerText = msg;
         toast.style.display = 'block';
         clearTimeout(toast._timer);
-        toast._timer = setTimeout(() => { toast.style.display = 'none'; }, 3500);
+        toast._timer = setTimeout(() => { toast.style.display = 'none'; }, duration);
     }
 
-    function saveToLocalStorage(data) {
-        try {
-            localStorage.setItem('tidybooks_data_v2', JSON.stringify(data));
-        } catch(e) {}
+    function getFormattedDate() {
+        const now = new Date();
+        const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+        return now.toLocaleDateString('ar-EG', options);
+    }
+
+    function cleanOldTrashData(booksList) {
+        if (!Array.isArray(booksList)) return [];
+        return booksList.filter(b => {
+            if (!b) return false;
+            const title = (b.title || '').toString();
+            const author = (b.author || '').toString();
+            const translator = (b.translator || '').toString();
+
+            if (title.includes('رنا الصيفي') || author.includes('رنا الصيفي') || translator.includes('رنا الصيفي')) {
+                return false;
+            }
+            return true;
+        });
     }
 
     function loadFromLocalStorage() {
-        try {
-            const localData = localStorage.getItem('tidybooks_data_v2');
-            if (localData) {
-                globalBooks = JSON.parse(localData) || [];
-            }
-        } catch(e) {
-            globalBooks = [];
+        const localData = localStorage.getItem('tidybooks_data');
+        if (localData) {
+            try {
+                let parsed = JSON.parse(localData);
+                globalBooks = cleanOldTrashData(parsed);
+                saveToLocalStorage(globalBooks);
+            } catch(e) { globalBooks = []; }
         }
         renderTable(globalBooks);
         updateDropdownOptions(globalBooks);
     }
 
+    function saveToLocalStorage(data) {
+        localStorage.setItem('tidybooks_data', JSON.stringify(data));
+    }
+
+    // تهيئة Firebase
+    try {
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        db = getDatabase(app);
+        booksRef = ref(db, 'library_books');
+
+        signInAnonymously(auth).catch(() => {
+            dbStatus.className = "status-badge status-local";
+            dbStatus.innerHTML = "💾 وضع الحفظ المحلي";
+        });
+
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                onValue(booksRef, (snapshot) => {
+                    isFirebaseConnected = true;
+                    const data = snapshot.val();
+                    let rawList = data ? (Array.isArray(data) ? data : Object.values(data)) : [];
+                    
+                    let cleanedList = cleanOldTrashData(rawList);
+                    if (cleanedList.length !== rawList.length) {
+                        set(booksRef, cleanedList);
+                    }
+
+                    globalBooks = cleanedList;
+                    saveToLocalStorage(globalBooks);
+                    renderTable(globalBooks);
+                    updateDropdownOptions(globalBooks);
+                    dbStatus.className = "status-badge status-online";
+                    dbStatus.innerHTML = "🟢 متصل بالسحابة (Firebase)";
+                }, (error) => {
+                    isFirebaseConnected = false;
+                    dbStatus.className = "status-badge status-local";
+                    dbStatus.innerHTML = "💾 وضع الحفظ المحلي";
+                    loadFromLocalStorage();
+                });
+            }
+        });
+    } catch (err) {
+        isFirebaseConnected = false;
+        dbStatus.className = "status-badge status-local";
+        dbStatus.innerHTML = "💾 وضع الحفظ المحلي";
+        loadFromLocalStorage();
+    }
+
+    // تحديث القائمة المنسدلة بناءً على تصفية البحث
     function updateDropdownOptions(books) {
         const query = (searchBookInput.value || '').trim().toLowerCase();
         bookSelectDropdown.innerHTML = '<option value="">اختر كتاباً لحذفه...</option>';
@@ -185,6 +269,7 @@
         updateDropdownOptions(globalBooks);
     });
 
+    // حذف كتاب محدد فردياً
     deleteSingleBtn.addEventListener('click', () => {
         const selectedVal = bookSelectDropdown.value;
         if (!selectedVal) {
@@ -196,128 +281,144 @@
         const bookName = targetBook ? targetBook.title : 'هذا الكتاب';
 
         if (confirm(`هل أنت تأكد من حذف "${bookName}" فقط من السجل؟`)) {
-            globalBooks = globalBooks.filter(b => b.inventoryNo !== selectedVal && b.seqNo != selectedVal);
-            globalBooks.forEach((b, idx) => b.seqNo = idx + 1);
+            const updatedList = globalBooks.filter(b => b.inventoryNo !== selectedVal && b.seqNo != selectedVal);
 
-            saveToLocalStorage(globalBooks);
-            renderTable(globalBooks);
-            updateDropdownOptions(globalBooks);
-            showToast(`🗑️ تم حذف كتاب "${bookName}" بنجاح`);
+            // إعادة ترقيم السلسلة
+            updatedList.forEach((b, idx) => b.seqNo = idx + 1);
+
+            if (isFirebaseConnected && booksRef) {
+                set(booksRef, updatedList).then(() => {
+                    showToast(`🗑️ تم حذف كتاب "${bookName}" بنجاح`);
+                });
+            } else {
+                saveToLocalStorage(updatedList);
+                globalBooks = updatedList;
+                renderTable(globalBooks);
+                updateDropdownOptions(globalBooks);
+                showToast(`🗑️ تم حذف كتاب "${bookName}" بنجاح`);
+            }
         }
     });
 
-    function createNewBookObject(counter) {
-        return {
-            seqNo: counter,
-            inventoryNo: 'INV-' + Math.floor(10000 + Math.random() * 90000),
-            title: '',
-            subtitle: '',
-            author: '',
-            translator: '',
-            investigator: '',
-            editor: '',
-            publisher: '',
-            publicationPlace: '',
-            edition: '',
-            publishYear: '',
-            isbn: '',
-            pages: '',
-            bookSize: '',
-            language: 'العربية',
-            category: '',
-            subject: '',
-            status: 'متاح'
-        };
-    }
-
-    // محرك التحليل والفرز المباشر المحسن والمضمون
-    function parseAndClassifyData(rawText, startingIndex = 1) {
+    // دالة تحليل وتنظيم البيانات الذكية المحدثة بالكامل
+    function parseMessyData(rawText, startingIndex = 1) {
         if (!rawText || !rawText.trim()) return [];
 
+        const lines = rawText.split('\n').map(l => l.trim()).filter(l => l.length > 0);
         let newBooks = [];
         let counter = startingIndex;
-        let lines = rawText.split('\n');
-        let currentBook = null;
+        const todayStr = new Date().toISOString().split('T')[0];
 
-        lines.forEach((line) => {
-            let trimmed = line.trim();
-            if (!trimmed) return;
+        lines.forEach(line => {
+            let cleaned = line
+                .replace(/—+/g, ' | ')
+                .replace(/–+/g, ' | ')
+                .replace(/\t+/g, ' | ')
+                .replace(/\|+/g, '|');
 
-            // إذا كان السطر يبدأ برقم كشف أو بداية كتاب جديد
-            let isNewStart = /^\d+[\.\-\)]\s*/.test(trimmed) || trimmed.startsWith('كتاب') || trimmed.includes('اسم الكتاب:') || trimmed.includes('العنوان:');
+            let parts = cleaned.split('|').map(p => p.trim()).filter(p => p.length > 0);
+            if (parts.length === 0) return;
 
-            if (isNewStart && currentBook && currentBook.title) {
-                newBooks.push(currentBook);
-                currentBook = null;
-            }
+            let currentBook = {
+                seqNo: counter++,
+                inventoryNo: 'INV-' + Math.floor(10000 + Math.random() * 90000),
+                title: '',
+                subtitle: '',
+                author: '',
+                translator: '',
+                investigator: '',
+                editor: '',
+                publisher: '',
+                publicationPlace: '',
+                edition: '',
+                publishYear: '',
+                isbn10: '',
+                isbn13: '',
+                pages: '',
+                bookSize: '',
+                language: 'العربية',
+                materialType: 'كتاب مطبوع',
+                category: '',
+                subject: '',
+                keywords: '',
+                description: '',
+                seriesName: '',
+                seriesNo: '',
+                copyNo: '1',
+                classNo: '',
+                shelfNo: '',
+                department: '',
+                bookLocation: '',
+                status: 'متاح',
+                copiesCount: '1',
+                acquisitionDate: todayStr,
+                acquisitionSource: '',
+                price: '',
+                currency: 'SAR',
+                notes: '',
+                coverImage: '',
+                originalTitle: '',
+                coverTitle: '',
+                fullNameAuthors: '',
+                authorNickname: '',
+                authorEntity: '',
+                electronicKeywords: '',
+                summary: '',
+                toc: '',
+                bookLink: '',
+                coverLink: '',
+                dataSource: 'النظام الداخلي للمكتبة',
+                lastUpdate: todayStr,
+                trustDegree: 'عالية (100%)'
+            };
 
-            if (!currentBook) {
-                currentBook = createNewBookObject(counter++);
-            }
+            parts.forEach((part, idx) => {
+                let cleanPart = part.replace(/^\d+[\.\-]\s*/, '').trim();
 
-            let parts = trimmed.split(/[|—–\t;]/);
-
-            parts.forEach((part) => {
-                let clean = part.replace(/^\d+[\.\-\)]\s*/, '').trim();
-                if (!clean) return;
-
-                if (/(اسم الكتاب|عنوان الكتاب|العنوان الرئيسي|العنوان):/i.test(clean)) {
-                    currentBook.title = clean.replace(/.*?:/, '').trim();
-                } else if (/(العنوان الفرعي|عنوان ثانوي):/i.test(clean)) {
-                    currentBook.subtitle = clean.replace(/.*?:/, '').trim();
-                } else if (/(المؤلف|تأليف|المؤلفون|الكاتب):/i.test(clean)) {
-                    currentBook.author = clean.replace(/.*?:/, '').trim();
-                } else if (/(المترجم|ترجمة):/i.test(clean)) {
-                    currentBook.translator = clean.replace(/.*?:/, '').trim();
-                } else if (/(المحقق|تحقيق):/i.test(clean)) {
-                    currentBook.investigator = clean.replace(/.*?:/, '').trim();
-                } else if (/(المحرر|إعداد):/i.test(clean)) {
-                    currentBook.editor = clean.replace(/.*?:/, '').trim();
-                } else if (/(دار النشر|الناشر|المطبعة):/i.test(clean)) {
-                    currentBook.publisher = clean.replace(/.*?:/, '').trim();
-                } else if (/(مكان النشر|بلد النشر|مدينة النشر):/i.test(clean)) {
-                    currentBook.publicationPlace = clean.replace(/.*?:/, '').trim();
-                } else if (/(الطبعة|رقم الطبعة):/i.test(clean)) {
-                    currentBook.edition = clean.replace(/.*?:/, '').trim();
-                } else if (/(سنة النشر|تاريخ النشر|السنة):/i.test(clean)) {
-                    currentBook.publishYear = clean.replace(/.*?:/, '').trim();
-                } else if (/(ISBN|الردمك):/i.test(clean)) {
-                    currentBook.isbn = clean.replace(/.*?:/, '').trim();
-                } else if (/(الصفحات|عدد الصفحات|صفحة):/i.test(clean)) {
-                    currentBook.pages = clean.replace(/.*?:/, '').replace(/[^0-9]/g, '').trim();
-                } else if (/(التصنيف|فن الكتاب|المجال):/i.test(clean)) {
-                    currentBook.category = clean.replace(/.*?:/, '').trim();
-                } else if (/(الموضوع|موضوع الكتاب):/i.test(clean)) {
-                    currentBook.subject = clean.replace(/.*?:/, '').trim();
-                } else if (/(حجم الكتاب|القياس):/i.test(clean)) {
-                    currentBook.bookSize = clean.replace(/.*?:/, '').trim();
-                } else if (/(اللغة):/i.test(clean)) {
-                    currentBook.language = clean.replace(/.*?:/, '').trim();
+                if (/دار النشر:|النشر:|ناشر:/i.test(cleanPart)) {
+                    currentBook.publisher = cleanPart.replace(/(دار النشر|النشر|ناشر):\s*/i, '').trim();
+                } else if (/الطبعة:|طبعة:/i.test(cleanPart)) {
+                    currentBook.edition = cleanPart.replace(/(الطبعة|طبعة):\s*/i, '').trim();
+                } else if (/تأليف:|المؤلف:|الكاتب:/i.test(cleanPart)) {
+                    currentBook.author = cleanPart.replace(/(تأليف|المؤلف|الكاتب):\s*/i, '').trim();
+                } else if (/ترجمة:|المترجم:/i.test(cleanPart)) {
+                    currentBook.translator = cleanPart.replace(/(ترجمة|المترجم):\s*/i, '').trim();
+                } else if (/تحقيق:|المحقق:/i.test(cleanPart)) {
+                    currentBook.investigator = cleanPart.replace(/(تحقيق|المحقق):\s*/i, '').trim();
+                } else if (/التصنيف:|قسم:/i.test(cleanPart)) {
+                    currentBook.category = cleanPart.replace(/(التصنيف|قسم):\s*/i, '').trim();
+                } else if (/(\b\d{3,4}\b\s*ص|\bصفحة\b)/i.test(cleanPart)) {
+                    currentBook.pages = cleanPart.replace(/[^\d]/g, '');
+                } else if (/^(19|20)\d{2}$/.test(cleanPart)) {
+                    currentBook.publishYear = cleanPart;
+                } else if (/^97[89]\d{10}$/.test(cleanPart.replace(/[- ]/g, ''))) {
+                    currentBook.isbn13 = cleanPart.replace(/[- ]/g, '');
                 } else {
-                    // إذا لم يحتوي على رمز نقطتين، يوضع حسب الترتيب الافتراضي للسطر
-                    if (!currentBook.title) {
-                        currentBook.title = clean;
-                    } else if (!currentBook.author && !/\d{4}/.test(clean)) {
-                        currentBook.author = clean;
-                    } else if (!currentBook.publisher && !/\d{4}/.test(clean)) {
-                        currentBook.publisher = clean;
-                    } else if (!currentBook.publishYear && /\b(19|20)\d{2}\b/.test(clean)) {
-                        currentBook.publishYear = clean.match(/\b(19|20)\d{2}\b/)[0];
+                    if (!currentBook.title && idx === 0) {
+                        currentBook.title = cleanPart;
+                    } else if (!currentBook.author && !cleanPart.includes('دار')) {
+                        currentBook.author = cleanPart;
+                    } else if (!currentBook.publisher) {
+                        currentBook.publisher = cleanPart;
                     }
                 }
             });
-        });
 
-        if (currentBook && currentBook.title) {
-            newBooks.push(currentBook);
-        }
+            if (currentBook.author) {
+                currentBook.fullNameAuthors = currentBook.author;
+            }
+
+            if (currentBook.title) {
+                newBooks.push(currentBook);
+            }
+        });
 
         return newBooks;
     }
 
     function renderTable(books) {
         if (!books || books.length === 0) {
-            tableBody.innerHTML = `<tr><td colspan="19" style="text-align:center;color:#94a3b8;padding:30px;">📭 السجل فارغ حالياً. قم بلصق كشف البيانات واضغط زر التصحيح والتصنيف.</td></tr>`;
+            tableBody.innerHTML = `<tr><td colspan="12" style="text-align:center;color:#94a3b8;padding:30px;">📭 السجل فارغ حالياً. قم بلصق نص البيانات لإضافتها وتنظيمها.</td></tr>`;
             recordCount.innerText = 'إجمالي الكتب: 0';
             return;
         }
@@ -328,21 +429,14 @@
                 <td><strong>${b.seqNo || (idx + 1)}</strong></td>
                 <td><span class="badge">${b.inventoryNo}</span></td>
                 <td><strong>${b.title || '—'}</strong></td>
-                <td>${b.subtitle || '—'}</td>
                 <td>${b.author || '—'}</td>
-                <td>${b.translator || '—'}</td>
-                <td>${b.investigator || '—'}</td>
-                <td>${b.editor || '—'}</td>
                 <td>${b.publisher || '—'}</td>
                 <td>${b.publicationPlace || '—'}</td>
                 <td>${b.edition || '—'}</td>
                 <td>${b.publishYear || '—'}</td>
-                <td>${b.isbn || '—'}</td>
-                <td>${b.pages ? b.pages + ' ص' : '—'}</td>
-                <td>${b.bookSize || '—'}</td>
-                <td>${b.language || '—'}</td>
+                <td>${b.isbn13 || '—'}</td>
                 <td>${b.category || '—'}</td>
-                <td>${b.subject || '—'}</td>
+                <td>${b.pages ? b.pages + ' ص' : '—'}</td>
                 <td><span style="color: #16a34a; font-weight:bold;">${b.status}</span></td>
             </tr>`;
         });
@@ -351,31 +445,53 @@
         recordCount.innerText = `إجمالي الكتب المحفوظة: ${books.length}`;
     }
 
-    processDataBtn.addEventListener('click', () => {
+    function handleDataInsertion() {
         const raw = inputText.value;
         if (!raw.trim()) {
-            showToast('⚠️ يرجى لصق نص الكشف أولاً في مربع النص لتصحيحه وتصنيفه');
+            showToast('⚠️ يرجى لصق نص أولاً في مربع النص لتنظيمه وإضافته');
             return;
         }
 
         const startIdx = globalBooks.length + 1;
-        const parsedNewBooks = parseAndClassifyData(raw, startIdx);
+        const parsedNewBooks = parseMessyData(raw, startIdx);
 
         if (parsedNewBooks.length > 0) {
-            globalBooks = [...globalBooks, ...parsedNewBooks];
-            saveToLocalStorage(globalBooks);
-            renderTable(globalBooks);
-            updateDropdownOptions(globalBooks);
-            inputText.value = '';
-            showToast(`✨ تم تصنيف وتصحيح ${parsedNewBooks.length} كتاب بنجاح ووضع البيانات بمكانها الصحيح`);
+            const updatedList = [...globalBooks, ...parsedNewBooks];
+            
+            if (isFirebaseConnected && booksRef) {
+                set(booksRef, updatedList).then(() => {
+                    inputText.value = '';
+                    showToast(`✨ تم تنظيم وإضافة ${parsedNewBooks.length} كتاب جديد بنجاح للسجل السحابي`);
+                }).catch(() => {
+                    saveToLocalStorage(updatedList);
+                    globalBooks = updatedList;
+                    renderTable(globalBooks);
+                    updateDropdownOptions(globalBooks);
+                    inputText.value = '';
+                    showToast(`✨ تم تنظيم وإضافة ${parsedNewBooks.length} كتاب جديد محلياً`);
+                });
+            } else {
+                saveToLocalStorage(updatedList);
+                globalBooks = updatedList;
+                renderTable(globalBooks);
+                updateDropdownOptions(globalBooks);
+                inputText.value = '';
+                showToast(`✨ تم تنظيم وإضافة ${parsedNewBooks.length} كتاب جديد محلياً`);
+            }
         } else {
-            showToast('⚠️ لم يتم التعرف على بيانات كتب صالحة في الكشف المدخل');
+            showToast('⚠️ لم يتم التعرف على بيانات كتب صالحة في النص المدخل');
         }
-    });
+    }
+
+    extractBtn.addEventListener('click', handleDataInsertion);
+    organizeBtn.addEventListener('click', handleDataInsertion);
 
     clearBtn.addEventListener('click', () => {
         if (confirm("هل أنت تأكد من مسح جميع البيانات المخزنة بالكامل؟")) {
-            localStorage.removeItem('tidybooks_data_v2');
+            if (isFirebaseConnected && booksRef) {
+                remove(booksRef);
+            }
+            localStorage.removeItem('tidybooks_data');
             globalBooks = [];
             renderTable([]);
             updateDropdownOptions([]);
@@ -384,33 +500,104 @@
         }
     });
 
-    // تصدير ملف Excel/CSV المباشر
     exportExcelBtn.addEventListener('click', () => {
         if (globalBooks.length === 0) {
             showToast('⚠️ لا توجد بيانات محفوظة لتصديرها');
             return;
         }
 
-        let csvContent = "\uFEFFم,رقم الجرد,اسم الكتاب,العنوان الفرعي,المؤلف,المترجم,المحقق,المحرر,دار النشر,مكان النشر,الطبعة,سنة النشر,ISBN,عدد الصفحات,حجم الكتاب,اللغة,التصنيف,الموضوع,الحالة\n";
+        const wb = XLSX.utils.book_new();
+        const exportDateStr = getFormattedDate();
 
-        globalBooks.forEach((b, idx) => {
-            csvContent += `"${b.seqNo || (idx + 1)}","${b.inventoryNo}","${(b.title||'').replace(/"/g, '""')}","${(b.subtitle||'').replace(/"/g, '""')}","${(b.author||'').replace(/"/g, '""')}","${(b.translator||'').replace(/"/g, '""')}","${(b.investigator||'').replace(/"/g, '""')}","${(b.editor||'').replace(/"/g, '""')}","${(b.publisher||'').replace(/"/g, '""')}","${(b.publicationPlace||'').replace(/"/g, '""')}","${(b.edition||'').replace(/"/g, '""')}","${(b.publishYear||'').replace(/"/g, '""')}","${(b.isbn||'').replace(/"/g, '""')}","${(b.pages||'').replace(/"/g, '""')}","${(b.bookSize||'').replace(/"/g, '""')}","${(b.language||'').replace(/"/g, '""')}","${(b.category||'').replace(/"/g, '""')}","${(b.subject||'').replace(/"/g, '""')}","${b.status}"\n`;
-        });
+        const thinBorder = {
+            top: { style: "thin", color: { rgb: "CBD5E1" } },
+            bottom: { style: "thin", color: { rgb: "CBD5E1" } },
+            left: { style: "thin", color: { rgb: "CBD5E1" } },
+            right: { style: "thin", color: { rgb: "CBD5E1" } }
+        };
 
-        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.setAttribute('href', url);
-        link.setAttribute('download', `فهرس_المكتبة_${new Date().toISOString().split('T')[0]}.csv`);
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        showToast('📊 تم تصدير السجل المحفوظ بنجاح (يمكن فتحه ببرنامج Excel)');
-    });
+        const headerStyle = {
+            font: { name: "Tajawal", sz: 11, bold: true, color: { rgb: "FFFFFF" } },
+            fill: { fgColor: { rgb: "1E3A8A" } },
+            alignment: { horizontal: "center", vertical: "center" },
+            border: thinBorder
+        };
 
-    // تحميل البيانات عند فتح الصفحة مباشرة
-    window.addEventListener('DOMContentLoaded', () => {
-        loadFromLocalStorage();
+        function applyStylesToSheet(ws) {
+            ws['!views'] = [{ RTL: true }];
+            const range = XLSX.utils.decode_range(ws['!ref']);
+            for (let R = range.s.r; R <= range.e.r; ++R) {
+                for (let C = range.s.c; C <= range.e.c; ++C) {
+                    const cellAddress = XLSX.utils.encode_cell({ r: R, c: C });
+                    if (!ws[cellAddress]) continue;
+
+                    if (R === 0) {
+                        ws[cellAddress].s = headerStyle;
+                    } else {
+                        const isEven = R % 2 === 0;
+                        ws[cellAddress].s = {
+                            font: { name: "Tajawal", sz: 10, color: { rgb: "1E293B" } },
+                            fill: { fgColor: { rgb: isEven ? "F8FAFC" : "FFFFFF" } },
+                            alignment: { horizontal: C === 0 ? "center" : "right", vertical: "center" },
+                            border: thinBorder
+                        };
+                    }
+                }
+            }
+        }
+
+        const exportInfoRow = ['تاريخ التصدير:', exportDateStr];
+        const copyrightRow = ['جميع الحقوق محفوظة © محمد رضا عوف ™'];
+
+        const headers1 = [
+            'م', 'رقم الجرد', 'اسم الكتاب', 'العنوان الفرعي', 'المؤلف', 'المترجم', 'المحقق', 'المحرر',
+            'دار النشر', 'مكان النشر', 'الطبعة', 'سنة النشر', 'ISBN-10', 'ISBN-13',
+            'عدد الصفحات', 'حجم الكتاب', 'اللغة', 'نوع المادة', 'التصنيف', 'الموضوع',
+            'الموضوعات والكلمات المفتاحية', 'وصف الكتاب', 'السلسلة', 'رقم الكتاب في السلسلة'
+        ];
+        const rows1 = globalBooks.map((b, idx) => [
+            b.seqNo || (idx + 1), b.inventoryNo, b.title, b.subtitle, b.author, b.translator, b.investigator, b.editor,
+            b.publisher, b.publicationPlace, b.edition, b.publishYear, b.isbn10, b.isbn13,
+            b.pages, b.bookSize, b.language, b.materialType, b.category, b.subject,
+            b.keywords, b.description, b.seriesName, b.seriesNo
+        ]);
+        const ws1 = XLSX.utils.aoa_to_sheet([headers1, ...rows1, [], exportInfoRow, copyrightRow]);
+        applyStylesToSheet(ws1);
+        XLSX.utils.book_append_sheet(wb, ws1, 'بيانات الكتاب الأساسية');
+
+        const headers2 = [
+            'م', 'رقم الجرد', 'اسم الكتاب', 'رقم النسخة', 'رقم التصنيف', 'رقم الرف', 'القسم', 'موقع الكتاب',
+            'حالة الكتاب', 'عدد النسخ', 'تاريخ الاقتناء', 'مصدر الاقتناء', 'سعر الشراء',
+            'العملة', 'ملاحظات', 'صورة الغلاف'
+        ];
+        const rows2 = globalBooks.map((b, idx) => [
+            b.seqNo || (idx + 1), b.inventoryNo, b.title, b.copyNo, b.classNo, b.shelfNo, b.department, b.bookLocation,
+            b.status, b.copiesCount, b.acquisitionDate, b.acquisitionSource, b.price,
+            b.currency, b.notes, b.coverImage
+        ]);
+        const ws2 = XLSX.utils.aoa_to_sheet([headers2, ...rows2, [], exportInfoRow, copyrightRow]);
+        applyStylesToSheet(ws2);
+        XLSX.utils.book_append_sheet(wb, ws2, 'بيانات النسخة بالمكتبة');
+
+        const headers3 = [
+            'م', 'رقم الجرد', 'اسم الكتاب', 'العنوان الأصلي', 'عنوان الغلاف', 'أسماء المؤلفين كاملة',
+            'اسم الشهرة للمؤلف', 'جهة التأليف', 'الكلمات المفتاحية', 'ملخص الكتاب',
+            'الفهرس / محتويات الكتاب', 'رابط الكتاب', 'رابط الغلاف', 'مصدر البيانات',
+            'تاريخ آخر تحديث', 'درجة الثقة في البيانات'
+        ];
+        const rows3 = globalBooks.map((b, idx) => [
+            b.seqNo || (idx + 1), b.inventoryNo, b.title, b.originalTitle, b.coverTitle, b.fullNameAuthors,
+            b.authorNickname, b.authorEntity, b.electronicKeywords, b.summary,
+            b.toc, b.bookLink, b.coverLink, b.dataSource,
+            b.lastUpdate, b.trustDegree
+        ]);
+        const ws3 = XLSX.utils.aoa_to_sheet([headers3, ...rows3, [], exportInfoRow, copyrightRow]);
+        applyStylesToSheet(ws3);
+        XLSX.utils.book_append_sheet(wb, ws3, 'بيانات الفهرسة الإلكترونية');
+
+        const todayISO = new Date().toISOString().split('T')[0];
+        XLSX.writeFile(wb, `فهرس_المكتبة_المحفوظ_${todayISO}.xlsx`);
+        showToast('📊 تم تصدير السجل المحفوظ كاملاً بنجاح');
     });
 </script>
 </body>
