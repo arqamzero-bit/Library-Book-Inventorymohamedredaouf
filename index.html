@@ -24,8 +24,8 @@
         .btn-success:hover { background: #15803d; }
         .btn-danger { background: #ef4444; color: white; }
         .btn-danger:hover { background: #dc2626; }
-        .btn-outline { background: transparent; border: 2px solid #cbd5e1; color: #334155; }
-        .btn-outline:hover { background: #f1f5f9; }
+        .btn-outline { background: #f1f5f9; border: 2px solid #cbd5e1; color: #334155; }
+        .btn-outline:hover { background: #e2e8f0; }
         .flex { display: flex; gap: 10px; flex-wrap: wrap; margin: 15px 0; align-items: center; }
         .table-wrapper { overflow-x: auto; margin: 15px 0; border-radius: 12px; border: 1px solid #e2e8f0; max-height: 500px; }
         table { width: 100%; border-collapse: collapse; font-size: 13px; white-space: nowrap; }
@@ -46,20 +46,20 @@
 <div class="container">
     <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
         <h1>📚 <span>نظام الفهرسة التلقائي</span> وتصدير متقدم لـ Excel</h1>
-        <div id="dbStatus" class="status-badge">🔄 جاري الاتصال...</div>
+        <div id="dbStatus" class="status-badge">🔄 جاري الاتصال والمصادقة...</div>
     </div>
-    <p>قم بلصق بيانات الكتب لإضافتها للسجل التراكمي المحفوظ.</p>
+    <p>قم بلصق أي بيانات كتب تجديدية ليتم تنظيمها فوراً وإضافتها للجدول المخزن.</p>
 
     <div class="flex">
-        <button class="btn btn-outline" id="loadSampleBtn">📋 تحميل نموذج بيانات</button>
+        <button class="btn btn-outline" id="organizeBtn">✨ تنظيم وإضافة النص المدخل</button>
         <button class="btn btn-success" id="exportExcelBtn">📊 تصدير ملف Excel (3 شيتات)</button>
         <button class="btn btn-danger" id="clearBtn">🗑️ مسح البيانات المخزنة بالكامل</button>
     </div>
 
-    <textarea id="inputText" placeholder="الصق النص هنا للإضافة على السجل الحالي..."></textarea>
+    <textarea id="inputText" placeholder="الصق نص البيانات المعقدة أو الحديثة هنا للتحليل والتنظيم..."></textarea>
     
     <div style="margin: 15px 0;" class="flex">
-        <button class="btn btn-primary" id="extractBtn">➕ إضافة البيانات للسجل المحفوظ</button>
+        <button class="btn btn-primary" id="extractBtn">➕ تنظيم وتنفيذ الإضافة</button>
         <span style="font-size:14px; color:#1e293b; font-weight:bold;" id="recordCount">إجمالي الكتب: 0</span>
     </div>
 
@@ -101,6 +101,7 @@
 <!-- Firebase SDKs -->
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
     import { getDatabase, ref, set, onValue, remove } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
     const firebaseConfig = {
@@ -122,9 +123,9 @@
     const inputText = document.getElementById('inputText');
     const tableBody = document.getElementById('tableBody');
     const extractBtn = document.getElementById('extractBtn');
+    const organizeBtn = document.getElementById('organizeBtn');
     const exportExcelBtn = document.getElementById('exportExcelBtn');
     const clearBtn = document.getElementById('clearBtn');
-    const loadSampleBtn = document.getElementById('loadSampleBtn');
     const recordCount = document.getElementById('recordCount');
     const toast = document.getElementById('toast');
     const dbStatus = document.getElementById('dbStatus');
@@ -142,7 +143,6 @@
         return now.toLocaleDateString('ar-EG', options);
     }
 
-    // تحميل من التخزين المحلي كخيار احتياطي ممتاز
     function loadFromLocalStorage() {
         const localData = localStorage.getItem('tidybooks_data');
         if (localData) {
@@ -157,39 +157,44 @@
         localStorage.setItem('tidybooks_data', JSON.stringify(data));
     }
 
-    // تهيئة السحابة مع معالجة الأخطاء السلسة
+    // تهيئة Firebase
     try {
         const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
         db = getDatabase(app);
         booksRef = ref(db, 'library_books');
 
-        onValue(booksRef, (snapshot) => {
-            isFirebaseConnected = true;
-            const data = snapshot.val();
-            if (data) {
-                globalBooks = Array.isArray(data) ? data : Object.values(data);
-            } else {
-                globalBooks = [];
-            }
-            saveToLocalStorage(globalBooks);
-            renderTable(globalBooks);
-            dbStatus.className = "status-badge status-online";
-            dbStatus.innerHTML = "🟢 متصل بالسحابة (Firebase)";
-        }, (error) => {
-            console.warn("Firebase fallback:", error);
-            isFirebaseConnected = false;
+        signInAnonymously(auth).catch(() => {
             dbStatus.className = "status-badge status-local";
-            dbStatus.innerHTML = "💾 وضع الحفظ المحلي (يعمل بدون انقطاع)";
-            loadFromLocalStorage();
+            dbStatus.innerHTML = "💾 وضع الحفظ المحلي";
+        });
+
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                onValue(booksRef, (snapshot) => {
+                    isFirebaseConnected = true;
+                    const data = snapshot.val();
+                    globalBooks = data ? (Array.isArray(data) ? data : Object.values(data)) : [];
+                    saveToLocalStorage(globalBooks);
+                    renderTable(globalBooks);
+                    dbStatus.className = "status-badge status-online";
+                    dbStatus.innerHTML = "🟢 متصل بالسحابة (Firebase)";
+                }, (error) => {
+                    isFirebaseConnected = false;
+                    dbStatus.className = "status-badge status-local";
+                    dbStatus.innerHTML = "💾 وضع الحفظ المحلي";
+                    loadFromLocalStorage();
+                });
+            }
         });
     } catch (err) {
-        console.warn("Initialization Error:", err);
         isFirebaseConnected = false;
         dbStatus.className = "status-badge status-local";
-        dbStatus.innerHTML = "💾 وضع الحفظ المحلي (يعمل بدون انقطاع)";
+        dbStatus.innerHTML = "💾 وضع الحفظ المحلي";
         loadFromLocalStorage();
     }
 
+    // خوارزمية ذكية لاستخراج وتنظيم البيانات من أي نص مدخل حديثاً
     function parseMessyData(rawText, startingIndex = 1) {
         if (!rawText || !rawText.trim()) return [];
 
@@ -235,7 +240,7 @@
                     translator: '',
                     investigator: '',
                     editor: '',
-                    publisher: '',
+                    publisher: 'دار المعارف',
                     publicationPlace: 'القاهرة',
                     edition: 'الأولى',
                     publishYear: '2023',
@@ -295,7 +300,7 @@
 
     function renderTable(books) {
         if (!books || books.length === 0) {
-            tableBody.innerHTML = `<tr><td colspan="12" style="text-align:center;color:#94a3b8;padding:30px;">📭 السجل فارغ حالياً. قم بفرز بيانات جديدة لإضافتها.</td></tr>`;
+            tableBody.innerHTML = `<tr><td colspan="12" style="text-align:center;color:#94a3b8;padding:30px;">📭 السجل فارغ حالياً. قم بلصق نص البيانات لإضافتها وتنظيمها.</td></tr>`;
             recordCount.innerText = 'إجمالي الكتب: 0';
             return;
         }
@@ -322,10 +327,11 @@
         recordCount.innerText = `إجمالي الكتب المحفوظة: ${books.length}`;
     }
 
-    extractBtn.addEventListener('click', () => {
+    // وظيفة معالجة النص المضاف
+    function handleDataInsertion() {
         const raw = inputText.value;
         if (!raw.trim()) {
-            showToast('⚠️ يرجى لصق نص أولاً لإضافته');
+            showToast('⚠️ يرجى لصق نص أولاً في مربع النص لتنظيمه وإضافته');
             return;
         }
 
@@ -338,25 +344,28 @@
             if (isFirebaseConnected && booksRef) {
                 set(booksRef, updatedList).then(() => {
                     inputText.value = '';
-                    showToast(`✅ تم إضافة ${parsedNewBooks.length} كتاب بنجاح للسجل السحابي`);
+                    showToast(`✨ تم تنظيم وإضافة ${parsedNewBooks.length} كتاب جديد بنجاح للسجل السحابي`);
                 }).catch(() => {
                     saveToLocalStorage(updatedList);
                     globalBooks = updatedList;
                     renderTable(globalBooks);
                     inputText.value = '';
-                    showToast(`✅ تم حفظ ${parsedNewBooks.length} كتاب على الجهاز محلياً`);
+                    showToast(`✨ تم تنظيم وإضافة ${parsedNewBooks.length} كتاب جديد محلياً`);
                 });
             } else {
                 saveToLocalStorage(updatedList);
                 globalBooks = updatedList;
                 renderTable(globalBooks);
                 inputText.value = '';
-                showToast(`✅ تم حفظ ${parsedNewBooks.length} كتاب على الجهاز محلياً`);
+                showToast(`✨ تم تنظيم وإضافة ${parsedNewBooks.length} كتاب جديد محلياً`);
             }
         } else {
-            showToast('⚠️ لم يتم التعرف على بيانات كتب جديدة صالحة');
+            showToast('⚠️ لم يتم التعرف على بيانات كتب صالحة في النص المدخل');
         }
-    });
+    }
+
+    extractBtn.addEventListener('click', handleDataInsertion);
+    organizeBtn.addEventListener('click', handleDataInsertion);
 
     clearBtn.addEventListener('click', () => {
         if (confirm("هل أنت تأكد من مسح جميع البيانات المخزنة بالكامل؟")) {
@@ -369,11 +378,6 @@
             inputText.value = '';
             showToast('🗑️ تم مسح السجل المخزن بنجاح');
         }
-    });
-
-    loadSampleBtn.addEventListener('click', () => {
-        inputText.value = `الأيام——————2—طه حسين—————3دار النشر: دار المعارف—دار المعارف————4الطبعة: الطبعة الثالثة——الطبعة الثالثة———5كليلة ودمنة——————6—عبد الله بن المقفع—————7دار النشر: دار المعارف—دار المعارف————8الطبعة: الطبعة الأولى——الطبعة الأولى`;
-        showToast('📋 تم تحميل نموذج التجربة في المربع');
     });
 
     exportExcelBtn.addEventListener('click', () => {
