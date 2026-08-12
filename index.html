@@ -48,7 +48,7 @@
         <h1>📚 <span>نظام الفهرسة التلقائي</span> وتصدير متقدم لـ Excel</h1>
         <div id="dbStatus" class="status-badge">🔄 جاري الاتصال والمصادقة...</div>
     </div>
-    <p>قم بلصق أي بيانات كتب تجديدية ليتم تنظيمها فوراً وإضافتها للجدول المخزن.</p>
+    <p>قم بلصق بيانات الكتب الحقيقية ليتم تنظيمها وحفظها في السجل المباشر.</p>
 
     <div class="flex">
         <button class="btn btn-outline" id="organizeBtn">✨ تنظيم وإضافة النص المدخل</button>
@@ -56,7 +56,7 @@
         <button class="btn btn-danger" id="clearBtn">🗑️ مسح البيانات المخزنة بالكامل</button>
     </div>
 
-    <textarea id="inputText" placeholder="الصق نص البيانات المعقدة أو الحديثة هنا للتحليل والتنظيم..."></textarea>
+    <textarea id="inputText" placeholder="الصق نص بيانات الكتب هنا للتحليل والتنظيم..."></textarea>
     
     <div style="margin: 15px 0;" class="flex">
         <button class="btn btn-primary" id="extractBtn">➕ تنظيم وتنفيذ الإضافة</button>
@@ -194,7 +194,7 @@
         loadFromLocalStorage();
     }
 
-    // خوارزمية ذكية لاستخراج وتنظيم البيانات من أي نص مدخل حديثاً
+    // استخراج وتنظيم بيانات الكتب النظيفة تماماً من النص المدخل
     function parseMessyData(rawText, startingIndex = 1) {
         if (!rawText || !rawText.trim()) return [];
 
@@ -240,35 +240,35 @@
                     translator: '',
                     investigator: '',
                     editor: '',
-                    publisher: 'دار المعارف',
-                    publicationPlace: 'القاهرة',
-                    edition: 'الأولى',
-                    publishYear: '2023',
+                    publisher: '',
+                    publicationPlace: '',
+                    edition: '',
+                    publishYear: '',
                     isbn10: '',
-                    isbn13: '978-' + Math.floor(1000000000 + Math.random() * 9000000000),
-                    pages: '350',
-                    bookSize: 'غلاف عادي - 17x24 سم',
+                    isbn13: '',
+                    pages: '',
+                    bookSize: '',
                     language: 'العربية',
                     materialType: 'كتاب مطبوع',
-                    category: 'الأدب العربي',
-                    subject: 'تراث وأدب',
-                    keywords: 'أدب، تراث، نصوص',
-                    description: 'كتاب قيّم يحتوي على دراسات ونصوص أدبية محققة.',
+                    category: '',
+                    subject: '',
+                    keywords: '',
+                    description: '',
                     seriesName: '',
                     seriesNo: '',
 
                     copyNo: '1',
-                    classNo: '810.4',
-                    shelfNo: 'A-' + Math.floor(1 + Math.random() * 20),
-                    department: 'قسم الأدب والتاريخ',
-                    bookLocation: 'المكتبة المركزية - الدور الثاني',
-                    status: 'متاح لاستعارة',
+                    classNo: '',
+                    shelfNo: '',
+                    department: '',
+                    bookLocation: '',
+                    status: 'متاح',
                     copiesCount: '1',
                     acquisitionDate: todayStr,
-                    acquisitionSource: 'شراء مباشر',
-                    price: '45.00',
-                    currency: 'SAR',
-                    notes: 'نسخة ممتازة ومجلدة',
+                    acquisitionSource: '',
+                    price: '',
+                    currency: '',
+                    notes: '',
                     coverImage: '',
 
                     originalTitle: '',
@@ -276,9 +276,9 @@
                     fullNameAuthors: '',
                     authorNickname: '',
                     authorEntity: '',
-                    electronicKeywords: 'أدب، نصوص، كتب قديمة',
-                    summary: 'ملخص تحليلي للمحتوى والمواضيع المذكورة داخل الكتاب.',
-                    toc: 'المقدمة | الفصل الأول | الفصل الثاني | الخاتمة',
+                    electronicKeywords: '',
+                    summary: '',
+                    toc: '',
                     bookLink: '',
                     coverLink: '',
                     dataSource: 'النظام الداخلي للمكتبة',
@@ -313,12 +313,12 @@
                 <td><strong>${b.title || '—'}</strong></td>
                 <td>${b.author || '—'}</td>
                 <td>${b.publisher || '—'}</td>
-                <td>${b.publicationPlace}</td>
+                <td>${b.publicationPlace || '—'}</td>
                 <td>${b.edition || '—'}</td>
-                <td>${b.publishYear}</td>
-                <td>${b.isbn13}</td>
-                <td>${b.category}</td>
-                <td>${b.pages} ص</td>
+                <td>${b.publishYear || '—'}</td>
+                <td>${b.isbn13 || '—'}</td>
+                <td>${b.category || '—'}</td>
+                <td>${b.pages ? b.pages + ' ص' : '—'}</td>
                 <td><span style="color: #16a34a; font-weight:bold;">${b.status}</span></td>
             </tr>`;
         });
@@ -327,7 +327,6 @@
         recordCount.innerText = `إجمالي الكتب المحفوظة: ${books.length}`;
     }
 
-    // وظيفة معالجة النص المضاف
     function handleDataInsertion() {
         const raw = inputText.value;
         if (!raw.trim()) {
