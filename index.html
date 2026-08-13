@@ -3,208 +3,141 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>📚 نظام جرد وفهرسة المكتبات الذكي - TidyBooks Pro</title>
-    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;600;700&display=swap" rel="stylesheet">
+    <title>📚 نظام إدارة وفهرسة المكتبات الشامل - TidyBooks</title>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700&display=swap" rel="stylesheet">
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { font-family: 'Tajawal', sans-serif; background: #f1f5f9; color: #0f172a; padding: 15px; }
-        .container { max-width: 1300px; margin: 0 auto; background: #ffffff; padding: 20px; border-radius: 16px; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05); }
-        
-        .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #e2e8f0; padding-bottom: 15px; margin-bottom: 20px; flex-wrap: wrap; gap: 10px; }
-        .header h1 { font-size: 22px; color: #1e3a8a; }
-        .header h1 span { color: #2563eb; }
-        
-        .status-badge { background: #e0f2fe; color: #0369a1; padding: 6px 14px; border-radius: 20px; font-size: 13px; font-weight: bold; }
-        .status-online { background: #d1fae5; color: #065f46; }
-
-        .toolbar { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 20px; }
-        .btn { border: none; padding: 10px 18px; border-radius: 10px; font-family: 'Tajawal', sans-serif; font-weight: 700; font-size: 13.5px; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; transition: 0.2s; }
+        body { font-family: 'Tajawal', sans-serif; background: #f0f4f8; padding: 20px; color: #1e293b; }
+        .container { max-width: 1200px; margin: 0 auto; background: white; padding: 25px; border-radius: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+        h1 { color: #0f172a; margin-bottom: 8px; font-size: 24px; }
+        h1 span { color: #2563eb; }
+        p { color: #475569; margin-bottom: 20px; font-size: 14px; }
+        textarea { width: 100%; min-height: 100px; padding: 12px; border: 1.5px solid #cbd5e1; border-radius: 12px; font-family: 'Tajawal', sans-serif; font-size: 13.5px; background: #f8fafc; resize: vertical; }
+        .btn {
+            padding: 10px 20px; border: none; border-radius: 50px; font-weight: 700; font-size: 13.5px;
+            font-family: 'Tajawal', sans-serif; cursor: pointer; transition: 0.2s;
+            display: inline-flex; align-items: center; gap: 8px; text-decoration: none;
+        }
         .btn-primary { background: #2563eb; color: white; }
         .btn-primary:hover { background: #1d4ed8; }
         .btn-success { background: #16a34a; color: white; }
         .btn-success:hover { background: #15803d; }
-        .btn-purple { background: #8b5cf6; color: white; }
-        .btn-purple:hover { background: #7c3aed; }
         .btn-danger { background: #ef4444; color: white; }
         .btn-danger:hover { background: #dc2626; }
-        .btn-outline { background: white; border: 1.5px solid #cbd5e1; color: #334155; }
-        .btn-outline:hover { background: #f8fafc; }
-
-        /* منطقة الماسح الضوئي */
-        .scanner-section { background: #0f172a; border-radius: 14px; padding: 15px; color: white; margin-bottom: 20px; display: none; }
-        #reader { width: 100%; max-width: 500px; margin: 0 auto; border-radius: 10px; overflow: hidden; }
-
-        /* شريط البحث */
-        .search-bar { display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap; }
-        .search-input { flex: 1; min-width: 250px; padding: 10px 15px; border: 1.5px solid #cbd5e1; border-radius: 10px; font-family: 'Tajawal'; outline: none; }
-        .search-input:focus { border-color: #2563eb; }
-
-        /* الجدول */
-        .table-wrapper { overflow-x: auto; border: 1px solid #e2e8f0; border-radius: 12px; max-height: 550px; }
-        table { width: 100%; border-collapse: collapse; font-size: 12.5px; white-space: nowrap; text-align: right; }
-        th { background: #1e3a8a; color: white; padding: 12px 10px; position: sticky; top: 0; z-index: 10; font-weight: 700; }
-        td { padding: 10px; border-bottom: 1px solid #f1f5f9; }
+        .btn-purple { background: #8b5cf6; color: white; }
+        .btn-purple:hover { background: #7c3aed; }
+        .btn-orange { background: #f97316; color: white; }
+        .btn-orange:hover { background: #ea580c; }
+        .btn-outline { background: transparent; border: 2px solid #cbd5e1; color: #334155; }
+        .btn-outline:hover { background: #f1f5f9; }
+        .btn-sm-danger { background: #fee2e2; color: #dc2626; padding: 4px 8px; border-radius: 6px; border: none; cursor: pointer; font-size: 12px; font-weight: bold; }
+        
+        .flex { display: flex; gap: 10px; flex-wrap: wrap; margin: 15px 0; align-items: center; }
+        .search-box { display: flex; align-items: center; background: #f8fafc; border: 1.5px solid #cbd5e1; border-radius: 50px; padding: 6px 15px; margin-bottom: 10px; width: 100%; max-width: 400px; }
+        .search-box input { border: none; background: transparent; outline: none; font-family: 'Tajawal', sans-serif; font-size: 13.5px; width: 100%; margin-right: 8px; }
+        
+        .table-wrapper { overflow-x: auto; margin: 15px 0; border-radius: 12px; border: 1px solid #e2e8f0; max-height: 500px; }
+        table { width: 100%; border-collapse: collapse; font-size: 13px; white-space: nowrap; }
+        th { background: #1e3a8a; color: white; font-weight: 700; padding: 12px 10px; text-align: right; border-bottom: 2px solid #cbd5e1; position: sticky; top: 0; z-index: 10; }
+        td { padding: 10px; border-bottom: 1px solid #e2e8f0; }
         tr:nth-child(even) { background: #f8fafc; }
         tr:hover { background: #f1f5f9; }
+        .badge { background: #dbeafe; color: #1e40af; padding: 3px 8px; border-radius: 30px; font-size: 11px; font-weight: bold; }
+        .status-badge { background: #fef3c7; color: #92400e; padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: bold; display: inline-flex; align-items: center; gap: 5px; }
+        .status-online { background: #d1fae5; color: #065f46; }
+        .status-local { background: #e0f2fe; color: #0369a1; }
+        .toast { position: fixed; bottom: 30px; left: 30px; background: #0f172a; color: white; padding: 12px 24px; border-radius: 12px; font-weight: 700; display: none; z-index: 999; }
+        .section-tag { background: #e0e7ff; color: #3730a3; padding: 4px 12px; border-radius: 6px; font-size: 12px; font-weight: bold; margin-bottom: 10px; display: inline-block; }
+        footer { margin-top: 25px; text-align: center; padding: 15px; border-top: 1px solid #e2e8f0; color: #64748b; font-size: 13px; font-weight: 700; }
 
-        /* النافذة المنبثقة لمراجعة البيانات */
-        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 1000; justify-content: center; align-items: center; padding: 15px; }
-        .modal-content { background: white; border-radius: 16px; width: 100%; max-width: 750px; max-height: 90vh; overflow-y: auto; padding: 25px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); }
-        .modal-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e2e8f0; padding-bottom: 10px; margin-bottom: 15px; }
-        .modal-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; text-align: right; }
-        .form-group { display: flex; flex-direction: column; gap: 4px; }
-        .form-group label { font-size: 12px; font-weight: bold; color: #475569; }
-        .form-group input, .form-group select, .form-group textarea { padding: 8px 12px; border: 1.5px solid #cbd5e1; border-radius: 8px; font-family: 'Tajawal'; font-size: 13px; outline: none; }
-        .form-group textarea { grid-column: span 2; resize: vertical; min-height: 50px; }
-        
-        .toast { position: fixed; bottom: 20px; left: 20px; background: #0f172a; color: white; padding: 12px 20px; border-radius: 10px; font-weight: bold; font-size: 13px; display: none; z-index: 2000; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.3); }
-        footer { margin-top: 20px; text-align: center; font-size: 12px; color: #64748b; font-weight: bold; }
+        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); justify-content: center; align-items: center; }
+        .modal-content { background: white; padding: 20px; border-radius: 16px; width: 90%; max-width: 500px; text-align: center; position: relative; }
+        .modal-close { position: absolute; top: 10px; left: 15px; font-size: 22px; cursor: pointer; color: #64748b; font-weight: bold; }
+        #interactive.viewport { width: 100%; height: 280px; overflow: hidden; position: relative; border-radius: 12px; background: #000; }
+        #interactive.viewport video { width: 100%; height: 100%; object-fit: cover; }
+        canvas.drawingBuffer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
     </style>
 </head>
 <body>
-
 <div class="container">
-    <div class="header">
-        <h1>📚 <span>TidyBooks Pro</span> - نظام الجرد والاستعلام الآلي</h1>
-        <div id="dbStatus" class="status-badge">🔄 جاري مزامنة قاعدة البيانات...</div>
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+        <h1>📚 <span>نظام الفهرسة والضبط الموحد</span> للتصدير للإكسل</h1>
+        <div id="dbStatus" class="status-badge">🔄 جاري الاتصال...</div>
     </div>
+    <p>ماسح باركود دقيق ومحلل نصوص ذكي لاستخراج حقول الكتاب تلقائياً وضبطها بتنسيق إكسل موحد.</p>
 
-    <div class="toolbar">
-        <button class="btn btn-purple" id="toggleScannerBtn">📷 فتح/إغلاق كاميرا الباركود</button>
-        <button class="btn btn-primary" id="manualAddBtn">➕ إضافة كتاب يدويًا</button>
-        <button class="btn btn-outline" id="loadSampleBtn">📋 نموذج تجريبي محاكي</button>
+    <div class="flex">
+        <button class="btn btn-outline" id="loadSampleBtn">📋 تحميل نموذج محاكي</button>
+        <button class="btn btn-purple" id="scanBarcodeBtn">📷 مسح باركود (ISBN)</button>
+        
+        <label class="btn btn-orange" style="cursor: pointer;">
+            🔍 التقاط الغلاف واستخراج المؤلف والبيانات
+            <input type="file" id="lensCaptureInput" accept="image/*" capture="environment" style="display: none;">
+        </label>
+
         <button class="btn btn-success" id="exportExcelBtn">📊 تصدير Excel بالتنسيق الإجباري</button>
-        <button class="btn btn-danger" id="clearAllBtn">🗑️ تفريغ السجل بالكامل</button>
+        <button class="btn btn-danger" id="clearBtn">🗑️ مسح السجل بالكامل</button>
     </div>
 
-    <!-- منطقة الكاميرا -->
-    <div class="scanner-section" id="scannerSection">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-            <h3>📷 وجه الباركود نحو الكاميرا (مسح مستمر)</h3>
-            <span style="font-size: 12px; color: #94a3b8;">يدعم EAN-13, ISBN, Code 128, QR</span>
+    <textarea id="inputText" placeholder="يمكنك كتابة البيانات هنا مفصولة بشرطة (—) مثال: اسم الكتاب — المؤلف — دار النشر"></textarea>
+    
+    <div style="margin: 15px 0;" class="flex">
+        <button class="btn btn-primary" id="extractBtn">➕ إضافة للنظام وتطبيق التنسيق</button>
+        <span style="font-size:14px; color:#1e293b; font-weight:bold;" id="recordCount">إجمالي الكتب: 0</span>
+    </div>
+
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-top: 20px;">
+        <div class="section-tag">المعاينة الفورية للبيانات</div>
+        <div class="search-box">
+            🔍 <input type="text" id="searchInput" placeholder="ابحث باسم الكتاب أو المؤلف...">
         </div>
-        <div id="reader"></div>
     </div>
 
-    <!-- البحث المعيارى -->
-    <div class="search-bar">
-        <input type="text" id="searchInput" class="search-input" placeholder="🔍 بحث سريع: اسم الكتاب، المؤلف، ISBN، رقم الجرد، التصنيف...">
-        <span style="align-self: center; font-weight: bold; font-size: 13px;" id="recordCount">إجمالي الكتب: 0</span>
-    </div>
-
-    <!-- الجدول القياسي -->
     <div class="table-wrapper">
         <table>
             <thead>
                 <tr>
+                    <th>م</th>
                     <th>رقم الجرد</th>
-                    <th>ISBN / الباركود</th>
                     <th>اسم الكتاب</th>
                     <th>المؤلف</th>
-                    <th>الناشر</th>
+                    <th>دار النشر</th>
                     <th>مكان النشر</th>
-                    <th>السنة</th>
-                    <th>الصفحات</th>
-                    <th>اللغة</th>
+                    <th>الطبعة</th>
+                    <th>سنة النشر</th>
+                    <th>ISBN-13</th>
                     <th>التصنيف</th>
-                    <th>الموضوعات</th>
-                    <th>الموقع بالمكتبة</th>
+                    <th>الصفحات</th>
                     <th>الحالة</th>
-                    <th style="text-align: center;">إجراءات</th>
+                    <th style="text-align: center;">إجراء</th>
                 </tr>
             </thead>
             <tbody id="tableBody">
-                <tr><td colspan="14" style="text-align:center; color:#94a3b8; padding:30px;">🔄 جاري جلب البيانات...</td></tr>
+                <tr><td colspan="13" style="text-align:center;color:#94a3b8;padding:30px;">🔄 جاري تحميل البيانات...</td></tr>
             </tbody>
         </table>
     </div>
 
-    <footer>جميع الحقوق محفوظة © محمد رضا عوف ™</footer>
+    <footer>
+        جميع الحقوق محفوظة © محمد رضا عوف ™
+    </footer>
 </div>
 
-<!-- النافذة المنبثقة للمراجعة والاعتماد -->
-<div class="modal" id="bookModal">
+<div class="modal" id="scannerModal">
     <div class="modal-content">
-        <div class="modal-header">
-            <h3 id="modalTitle">📖 مراجعة وتأكيد بيانات الكتاب</h3>
-            <button style="border:none; background:none; font-size:20px; cursor:pointer;" id="closeModalBtn">&times;</button>
-        </div>
-        <form id="bookForm">
-            <div class="modal-grid">
-                <div class="form-group">
-                    <label>رقم الجرد (تلقائي)</label>
-                    <input type="text" id="f_inventoryNo" readonly style="background:#f1f5f9; font-weight:bold; color:#1e3a8a;">
-                </div>
-                <div class="form-group">
-                    <label>ISBN / الباركود</label>
-                    <input type="text" id="f_isbn" required>
-                </div>
-                <div class="form-group" style="grid-column: span 2;">
-                    <label>اسم الكتاب *</label>
-                    <input type="text" id="f_title" required>
-                </div>
-                <div class="form-group">
-                    <label>المؤلف *</label>
-                    <input type="text" id="f_author" required>
-                </div>
-                <div class="form-group">
-                    <label>الناشر</label>
-                    <input type="text" id="f_publisher">
-                </div>
-                <div class="form-group">
-                    <label>مكان النشر</label>
-                    <input type="text" id="f_place">
-                </div>
-                <div class="form-group">
-                    <label>سنة النشر</label>
-                    <input type="text" id="f_year">
-                </div>
-                <div class="form-group">
-                    <label>عدد الصفحات</label>
-                    <input type="number" id="f_pages" value="0">
-                </div>
-                <div class="form-group">
-                    <label>اللغة</label>
-                    <input type="text" id="f_language" value="العربية">
-                </div>
-                <div class="form-group">
-                    <label>التصنيف</label>
-                    <input type="text" id="f_category" value="عام">
-                </div>
-                <div class="form-group">
-                    <label>الموضوعات</label>
-                    <input type="text" id="f_subjects">
-                </div>
-                <div class="form-group">
-                    <label>موقع الكتاب بالمكتبة</label>
-                    <input type="text" id="f_location" placeholder="مثال: رف A3 - رف 2">
-                </div>
-                <div class="form-group">
-                    <label>حالة الكتاب</label>
-                    <select id="f_status">
-                        <option value="متاح">متاح</option>
-                        <option value="معار">معار</option>
-                        <option value="تحت الصيانة">تحت الصيانة</option>
-                    </select>
-                </div>
-                <div class="form-group" style="grid-column: span 2;">
-                    <label>الملخص / الفهرس</label>
-                    <textarea id="f_summary"></textarea>
-                </div>
-            </div>
-            <div style="margin-top: 20px; display: flex; gap: 10px; justify-content: flex-end;">
-                <button type="button" class="btn btn-outline" id="cancelModalBtn">إلغاء</button>
-                <button type="submit" class="btn btn-success">✅ اعتماد وحفظ الكتاب</button>
-            </div>
-        </form>
+        <span class="modal-close" id="closeModalBtn">&times;</span>
+        <h3 style="margin-bottom:12px; color:#1e3a8a;" id="modalTitle">📷 جاري الكشف عن الباركود...</h3>
+        <div id="interactive" class="viewport"></div>
+        <p style="margin-top:10px; font-size:12px; color:#64748b;">وجه الكاميرا نحو باركود الكتاب (ISBN) وثبت الهاتف لقراءته</p>
     </div>
 </div>
 
 <div class="toast" id="toast"></div>
 
-<!-- المكتبات البرمجية الذكية الحديثة -->
-<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+<!-- المكتبات البرمجية -->
 <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/quagga/0.12.1/quagga.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
@@ -218,361 +151,439 @@
         projectId: "mohamedredalibarary",
         storageBucket: "mohamedredalibarary.firebasestorage.app",
         messagingSenderId: "513706857127",
-        appId: "1:513706857127:web:2a4d1ad319655459d1c182"
+        appId: "1:513706857127:web:2a4d1ad319655459d1c182",
+        measurementId: "G-B8DZ51EEWQ"
     };
 
-    let globalBooks = [];
-    let html5QrCode = null;
-    let lastScannedCode = "";
-    let lastScanTime = 0;
+    let db = null;
     let booksRef = null;
     let isFirebaseConnected = false;
+    let globalBooks = [];
+    let isScanning = false;
 
-    // عناصر الصفحة
-    const toast = document.getElementById('toast');
+    const inputText = document.getElementById('inputText');
     const tableBody = document.getElementById('tableBody');
+    const extractBtn = document.getElementById('extractBtn');
+    const exportExcelBtn = document.getElementById('exportExcelBtn');
+    const clearBtn = document.getElementById('clearBtn');
+    const loadSampleBtn = document.getElementById('loadSampleBtn');
     const recordCount = document.getElementById('recordCount');
-    const searchInput = document.getElementById('searchInput');
-    const bookModal = document.getElementById('bookModal');
-    const bookForm = document.getElementById('bookForm');
-    const scannerSection = document.getElementById('scannerSection');
+    const toast = document.getElementById('toast');
     const dbStatus = document.getElementById('dbStatus');
+    const searchInput = document.getElementById('searchInput');
 
-    function showToast(msg) {
+    const scanBarcodeBtn = document.getElementById('scanBarcodeBtn');
+    const lensCaptureInput = document.getElementById('lensCaptureInput');
+    const scannerModal = document.getElementById('scannerModal');
+    const closeModalBtn = document.getElementById('closeModalBtn');
+
+    function showToast(msg, duration = 3500) {
         toast.innerText = msg;
         toast.style.display = 'block';
-        clearTimeout(toast._t);
-        toast._t = setTimeout(() => toast.style.display = 'none', 3000);
+        clearTimeout(toast._timer);
+        toast._timer = setTimeout(() => { toast.style.display = 'none'; }, duration);
+    }
+
+    function loadFromLocalStorage() {
+        const localData = localStorage.getItem('tidybooks_data');
+        if (localData) {
+            try { globalBooks = JSON.parse(localData); } catch(e) { globalBooks = []; }
+        }
+        renderTable(globalBooks);
+    }
+
+    function saveToLocalStorage(data) {
+        localStorage.setItem('tidybooks_data', JSON.stringify(data));
+    }
+
+    function updateStorageAndRender(updatedList) {
+        globalBooks = updatedList;
+        if (isFirebaseConnected && booksRef) {
+            set(booksRef, updatedList).then(() => renderTable(globalBooks)).catch(() => {
+                saveToLocalStorage(updatedList);
+                renderTable(globalBooks);
+            });
+        } else {
+            saveToLocalStorage(updatedList);
+            renderTable(globalBooks);
+        }
     }
 
     // تهيئة السحابة
     try {
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
-        const db = getDatabase(app);
-        booksRef = ref(db, 'tidybooks_v2');
+        db = getDatabase(app);
+        booksRef = ref(db, 'library_books');
 
-        signInAnonymously(auth);
+        signInAnonymously(auth).catch(() => {
+            dbStatus.className = "status-badge status-local";
+            dbStatus.innerHTML = "💾 وضع الحفظ المحلي";
+        });
+
         onAuthStateChanged(auth, (user) => {
             if (user) {
                 onValue(booksRef, (snapshot) => {
                     isFirebaseConnected = true;
-                    const val = snapshot.val();
-                    globalBooks = val ? (Array.isArray(val) ? val : Object.values(val)) : [];
-                    saveLocal(globalBooks);
+                    const data = snapshot.val();
+                    globalBooks = data ? (Array.isArray(data) ? data : Object.values(data)) : [];
+                    saveToLocalStorage(globalBooks);
                     renderTable(globalBooks);
                     dbStatus.className = "status-badge status-online";
-                    dbStatus.innerText = "🟢 متصل بالسحابة (Firebase)";
+                    dbStatus.innerHTML = "🟢 متصل بالسحابة (Firebase)";
+                }, () => {
+                    isFirebaseConnected = false;
+                    dbStatus.className = "status-badge status-local";
+                    dbStatus.innerHTML = "💾 وضع الحفظ المحلي";
+                    loadFromLocalStorage();
                 });
             }
         });
-    } catch(e) {
-        dbStatus.className = "status-badge";
-        dbStatus.innerText = "💾 وضع التخزين المحلي";
-        loadLocal();
+    } catch (err) {
+        isFirebaseConnected = false;
+        dbStatus.className = "status-badge status-local";
+        dbStatus.innerHTML = "💾 وضع الحفظ المحلي";
+        loadFromLocalStorage();
     }
 
-    function saveLocal(data) { localStorage.setItem('tidybooks_data_v2', JSON.stringify(data)); }
-    function loadLocal() {
-        const d = localStorage.getItem('tidybooks_data_v2');
-        globalBooks = d ? JSON.parse(d) : [];
-        renderTable(globalBooks);
+    // تنظيف وضبط هيكل بيانات الكتاب
+    function normalizeBookData(rawBook, index) {
+        return {
+            seqNo: index + 1,
+            inventoryNo: String(rawBook.inventoryNo || ('INV-' + (10000 + index))).trim(),
+            title: String(rawBook.title || 'عنوان غير محدد').trim(),
+            author: String(rawBook.author || 'مؤلف غير محدد').trim(),
+            publisher: String(rawBook.publisher || 'غير محدد').trim(),
+            publicationPlace: String(rawBook.publicationPlace || '—').trim(),
+            edition: String(rawBook.edition || 'الأولى').trim(),
+            publishYear: String(rawBook.publishYear || '—').trim(),
+            isbn13: String(rawBook.isbn13 || '978-0000000000').replace(/[^0-9-]/g, ''),
+            category: String(rawBook.category || 'عام').trim(),
+            pages: String(rawBook.pages || '0').replace(/[^0-9]/g, '') || '0',
+            status: String(rawBook.status || 'متاح لاستعارة').trim()
+        };
     }
 
-    function updateData(newList) {
-        globalBooks = newList;
-        if (isFirebaseConnected && booksRef) {
-            set(booksRef, newList);
-        } else {
-            saveLocal(newList);
-            renderTable(newList);
-        }
-    }
-
-    // توليد رقم جرد تلقائي (مثال: 000001)
-    function generateNextInventoryNo() {
-        const nextSeq = globalBooks.length + 1;
-        return String(nextSeq).padStart(6, '0');
-    }
-
-    // جلب البيانات بالبحث عبر API
-    async function fetchBookDataByISBN(isbn) {
-        showToast(`🔍 جاري البحث عن بيانات ISBN: ${isbn}...`);
-        let fetchedData = {
-            isbn: isbn,
-            title: '',
-            author: '',
-            publisher: '',
-            place: '',
-            year: '',
-            pages: 0,
-            language: 'العربية',
+    function addNewBookRecord(title, author, publisher, place, year, pages, isbn) {
+        const rawObj = {
+            inventoryNo: 'INV-' + Math.floor(10000 + Math.random() * 90000),
+            title: title || 'بدون عنوان',
+            author: author || 'غير محدد',
+            publisher: publisher || 'غير محدد',
+            publicationPlace: place || '—',
+            edition: 'الأولى',
+            publishYear: year || '—',
+            isbn13: isbn || ('978-' + Math.floor(1000000000 + Math.random() * 9000000000)),
+            pages: pages || '0',
             category: 'عام',
-            subjects: '',
-            summary: '',
-            location: 'رف عام',
-            status: 'متاح'
+            status: 'متاح لاستعارة'
         };
 
+        const formattedBook = normalizeBookData(rawObj, globalBooks.length);
+        const updatedList = [...globalBooks, formattedBook];
+        updateStorageAndRender(updatedList);
+        showToast(`✅ تم حفظ وترتيب بيانات الكتاب: "${formattedBook.title}"`);
+    }
+
+    // جلب البيانات من الشبكة الدولية بواسطة الباركود ISBN
+    async function fetchBookInfoByISBN(isbn) {
+        showToast(`🔍 جاري جلب تفاصيل الكتاب للرمز: ${isbn}...`);
         try {
             const cleanIsbn = isbn.replace(/[^0-9]/g, '');
             const res = await fetch(`https://openlibrary.org/api/books?bibkeys=ISBN:${cleanIsbn}&format=json&jscmd=data`);
             const data = await res.json();
-            const key = `ISBN:${cleanIsbn}`;
+            const bookKey = `ISBN:${cleanIsbn}`;
 
-            if (data[key]) {
-                const b = data[key];
-                fetchedData.title = b.title || '';
-                fetchedData.author = b.authors ? b.authors.map(a => a.name).join(', ') : '';
-                fetchedData.publisher = b.publishers ? b.publishers.map(p => p.name).join(', ') : '';
-                fetchedData.place = b.publish_places ? b.publish_places.map(p => p.name).join(', ') : '';
-                fetchedData.year = b.publish_date || '';
-                fetchedData.pages = b.number_of_pages || 0;
-                fetchedData.subjects = b.subjects ? b.subjects.map(s => s.name).slice(0, 3).join(', ') : '';
+            if (data[bookKey]) {
+                const b = data[bookKey];
+                const authorName = b.authors && b.authors.length > 0 ? b.authors[0].name : 'مؤلف غير محدد';
+                const publisherName = b.publishers && b.publishers.length > 0 ? b.publishers[0].name : 'غير محدد';
+                const pubDate = b.publish_date || '—';
+                const numPages = b.number_of_pages ? String(b.number_of_pages) : '0';
+
+                addNewBookRecord(b.title, authorName, publisherName, '—', pubDate, numPages, isbn);
+            } else {
+                addNewBookRecord(`كتاب (باركود ${isbn})`, 'غير محدد', 'غير محدد', '—', '—', '0', isbn);
             }
-        } catch(e) {}
-
-        openReviewModal(fetchedData);
-    }
-
-    // فتح نافذة المراجعة
-    function openReviewModal(data = {}) {
-        document.getElementById('f_inventoryNo').value = data.inventoryNo || generateNextInventoryNo();
-        document.getElementById('f_isbn').value = data.isbn || '';
-        document.getElementById('f_title').value = data.title || '';
-        document.getElementById('f_author').value = data.author || '';
-        document.getElementById('f_publisher').value = data.publisher || '';
-        document.getElementById('f_place').value = data.place || '';
-        document.getElementById('f_year').value = data.year || '';
-        document.getElementById('f_pages').value = data.pages || 0;
-        document.getElementById('f_language').value = data.language || 'العربية';
-        document.getElementById('f_category').value = data.category || 'عام';
-        document.getElementById('f_subjects').value = data.subjects || '';
-        document.getElementById('f_location').value = data.location || '';
-        document.getElementById('f_status').value = data.status || 'متاح';
-        document.getElementById('f_summary').value = data.summary || '';
-
-        bookModal.style.display = 'flex';
-    }
-
-    // حفظ الكتاب من النافذة
-    bookForm.addEventListener('submit', (e) => {
-        e.preventDefault();
-        const newBook = {
-            inventoryNo: document.getElementById('f_inventoryNo').value,
-            isbn: document.getElementById('f_isbn').value,
-            title: document.getElementById('f_title').value,
-            author: document.getElementById('f_author').value,
-            publisher: document.getElementById('f_publisher').value,
-            place: document.getElementById('f_place').value,
-            year: document.getElementById('f_year').value,
-            pages: document.getElementById('f_pages').value,
-            language: document.getElementById('f_language').value,
-            category: document.getElementById('f_category').value,
-            subjects: document.getElementById('f_subjects').value,
-            location: document.getElementById('f_location').value,
-            status: document.getElementById('f_status').value,
-            summary: document.getElementById('f_summary').value,
-        };
-
-        const existingIdx = globalBooks.findIndex(b => b.inventoryNo === newBook.inventoryNo);
-        let updatedList = [...globalBooks];
-        if (existingIdx >= 0) {
-            updatedList[existingIdx] = newBook;
-        } else {
-            updatedList.push(newBook);
+        } catch (err) {
+            addNewBookRecord(`كتاب (باركود ${isbn})`, 'غير محدد', 'غير محدد', '—', '—', '0', isbn);
         }
+    }
 
-        updateData(updatedList);
-        bookModal.style.display = 'none';
-        showToast(`✅ تم اعتماد الكتاب ورقم الجرد: ${newBook.inventoryNo}`);
+    // تحليل ذكي لصورة الغلاف واستخراج (المؤلف، العنوان، دار النشر، وسنة النشر)
+    lensCaptureInput.addEventListener('change', async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        showToast('⚙️ جاري قراءة وتفكيك نص الغلاف والتعرف على المؤلف...');
+        try {
+            const { data: { text } } = await Tesseract.recognize(file, 'ara+eng');
+            const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 1);
+            
+            if (lines.length > 0) {
+                let title = 'غير محدد';
+                let author = 'غير محدد';
+                let publisher = 'غير محدد';
+                let year = '—';
+
+                // خوارزمية استخراج مؤلف وعنوان ودار النشر بناءً على الكلمات المفتاحية ومواقع الأسطر
+                lines.forEach((line) => {
+                    const cleanLine = line.replace(/^(تأليف|الكاتب|المؤلف|بقلم|الدكتور|د\.)\s*[:\/]/i, '').trim();
+
+                    if (/تأليف|المؤلف|بقلم|دكتور|د\./i.test(line) && author === 'غير محدد') {
+                        author = cleanLine;
+                    } else if (/دار|مطبعة|منشورات|مؤسسة|مركز/i.test(line) && publisher === 'غير محدد') {
+                        publisher = line;
+                    } else if (/\b(19\d\d|20\d\d)\b/.test(line) && year === '—') {
+                        const match = line.match(/\b(19\d\d|20\d\d)\b/);
+                        if (match) year = match[0];
+                    }
+                });
+
+                // إذا لم يتم العثور على مؤلف صريح عبر الكلمات المفتاحية، افتراض الأسطر الأولى
+                if (title === 'غير محدد') title = lines[0];
+                if (author === 'غير محدد' && lines.length > 1) author = lines[1];
+                if (publisher === 'غير محدد' && lines.length > 2) publisher = lines[2];
+
+                addNewBookRecord(title, author, publisher, '—', year, '0', '');
+            } else {
+                showToast('⚠️ لم يتم العثور على نصوص واضحة في الصورة');
+            }
+        } catch (err) {
+            showToast('❌ تعذر تحليل الصورة، يرجى إعادة المحاولة');
+        } finally {
+            lensCaptureInput.value = '';
+        }
     });
 
-    document.getElementById('closeModalBtn').onclick = () => bookModal.style.display = 'none';
-    document.getElementById('cancelModalBtn').onclick = () => bookModal.style.display = 'none';
-    document.getElementById('manualAddBtn').onclick = () => openReviewModal();
+    // المحرك المطور لمسح الباركود (Quagga Reader)
+    function startBarcodeScanner() {
+        if (isScanning) return;
+        scannerModal.style.display = 'flex';
+        isScanning = true;
 
-    // تشغيل القارئ المطور القوي (Html5QRCode)
-    document.getElementById('toggleScannerBtn').onclick = () => {
-        if (scannerSection.style.display === 'block') {
-            stopScanner();
-        } else {
-            startScanner();
-        }
-    };
-
-    function startScanner() {
-        scannerSection.style.display = 'block';
-        if (!html5QrCode) {
-            html5QrCode = new Html5Qrcode("reader");
-        }
-
-        const config = { fps: 15, qrbox: { width: 300, height: 180 } };
-        html5QrCode.start(
-            { facingMode: "environment" },
-            config,
-            (decodedText) => {
-                const now = Date.now();
-                // منع التكرار الخطأ (دعم المسح المستمر مع مهلة ثانيتين للكود نفسه)
-                if (decodedText === lastScannedCode && (now - lastScanTime) < 3500) {
-                    return;
+        Quagga.init({
+            inputStream: {
+                name: "Live",
+                type: "LiveStream",
+                target: document.querySelector('#interactive'),
+                constraints: {
+                    facingMode: "environment",
+                    width: { min: 640, ideal: 1280 },
+                    height: { min: 480, ideal: 720 }
                 }
-                lastScannedCode = decodedText;
-                lastScanTime = now;
-
-                showToast(`📦 تم التقاط الرمز: ${decodedText}`);
-                fetchBookDataByISBN(decodedText);
             },
-            (errorMessage) => { /* تجاهل أخطاء عدم العثور الفوري */ }
-        ).catch(err => {
-            showToast('❌ تعذر فتح الكاميرا، يرجى منح الصلاحية');
+            locator: {
+                patchSize: "medium",
+                halfSample: true
+            },
+            numOfWorkers: navigator.hardwareConcurrency || 2,
+            decoder: {
+                readers: ["ean_reader", "ean_8_reader", "upc_reader", "code_128_reader"]
+            },
+            locate: true
+        }, function(err) {
+            if (err) {
+                showToast('❌ تعذر فتح الكاميرا، تأكد من إعطاء الصلاحية');
+                stopScanner();
+                return;
+            }
+            Quagga.start();
         });
+
+        Quagga.onDetected(onBarcodeDetected);
+    }
+
+    function onBarcodeDetected(result) {
+        if (result && result.codeResult && result.codeResult.code) {
+            const code = result.codeResult.code;
+            // التحقق من صحة طول رمز ISBN / EAN
+            if (code.length >= 8) {
+                Quagga.offDetected(onBarcodeDetected);
+                stopScanner();
+                fetchBookInfoByISBN(code);
+            }
+        }
     }
 
     function stopScanner() {
-        if (html5QrCode && html5QrCode.isScanning) {
-            html5QrCode.stop().then(() => {
-                scannerSection.style.display = 'none';
-            });
-        } else {
-            scannerSection.style.display = 'none';
-        }
+        isScanning = false;
+        try { Quagga.stop(); } catch(e){}
+        scannerModal.style.display = 'none';
     }
 
-    // عرض بيانات الجدول
+    closeModalBtn.addEventListener('click', stopScanner);
+    scanBarcodeBtn.addEventListener('click', startBarcodeScanner);
+
+    // عرض الجدول الموحد
     function renderTable(books) {
-        const q = searchInput.value.trim().toLowerCase();
-        const filtered = books.filter(b => 
-            (b.title && b.title.toLowerCase().includes(q)) ||
-            (b.author && b.author.toLowerCase().includes(q)) ||
-            (b.isbn && b.isbn.includes(q)) ||
-            (b.inventoryNo && b.inventoryNo.includes(q)) ||
-            (b.category && b.category.toLowerCase().includes(q))
-        );
+        const query = searchInput.value.trim().toLowerCase();
+        const filtered = books.filter(b => b.title.toLowerCase().includes(query) || b.author.toLowerCase().includes(query));
 
         if (filtered.length === 0) {
-            tableBody.innerHTML = `<tr><td colspan="14" style="text-align:center; color:#94a3b8; padding:30px;">📭 لا توجد سجلات مطابقة.</td></tr>`;
+            tableBody.innerHTML = `<tr><td colspan="13" style="text-align:center;color:#94a3b8;padding:30px;">📭 لا توجد سجلات محفوظة.</td></tr>`;
             recordCount.innerText = `إجمالي الكتب: ${books.length}`;
             return;
         }
 
         let html = '';
-        filtered.forEach((b, i) => {
+        filtered.forEach((b, idx) => {
             html += `<tr>
-                <td><strong style="color:#2563eb;">${b.inventoryNo}</strong></td>
-                <td style="font-family:monospace;">${b.isbn}</td>
+                <td><strong>${b.seqNo}</strong></td>
+                <td><span class="badge">${b.inventoryNo}</span></td>
                 <td><strong>${b.title}</strong></td>
-                <td>${b.author}</td>
-                <td>${b.publisher || '—'}</td>
-                <td>${b.place || '—'}</td>
-                <td>${b.year || '—'}</td>
-                <td>${b.pages || 0}</td>
-                <td>${b.language || 'العربية'}</td>
-                <td>${b.category || 'عام'}</td>
-                <td>${b.subjects || '—'}</td>
-                <td>${b.location || '—'}</td>
-                <td><span style="color:#16a34a; font-weight:bold;">${b.status}</span></td>
-                <td style="text-align:center;">
-                    <button class="btn btn-outline edit-btn" style="padding:3px 8px; font-size:11px;" data-inv="${b.inventoryNo}">✏️ تعديل</button>
-                    <button class="btn btn-danger del-btn" style="padding:3px 8px; font-size:11px;" data-inv="${b.inventoryNo}">🗑️</button>
+                <td><span style="color:#2563eb; font-weight:bold;">${b.author}</span></td>
+                <td>${b.publisher}</td>
+                <td>${b.publicationPlace}</td>
+                <td>${b.edition}</td>
+                <td>${b.publishYear}</td>
+                <td style="font-family:monospace;">${b.isbn13}</td>
+                <td>${b.category}</td>
+                <td>${b.pages} ص</td>
+                <td><span style="color: #16a34a; font-weight:bold;">${b.status}</span></td>
+                <td style="text-align: center;">
+                    <button class="btn-sm-danger delete-btn" data-index="${idx}">🗑️ حذف</button>
                 </td>
             </tr>`;
         });
 
         tableBody.innerHTML = html;
-        recordCount.innerText = `إجمالي الكتب: ${books.length}`;
+        recordCount.innerText = `إجمالي الكتب المحفوظة: ${books.length}`;
 
-        document.querySelectorAll('.edit-btn').forEach(b => {
-            b.onclick = (e) => {
-                const inv = e.target.getAttribute('data-inv');
-                const book = globalBooks.find(item => item.inventoryNo === inv);
-                if (book) openReviewModal(book);
-            };
-        });
-
-        document.querySelectorAll('.del-btn').forEach(b => {
-            b.onclick = (e) => {
-                const inv = e.target.getAttribute('data-inv');
-                if (confirm(`حذف الكتاب رقم الجرد: ${inv}؟`)) {
-                    const newList = globalBooks.filter(item => item.inventoryNo !== inv);
-                    updateData(newList);
-                }
-            };
+        document.querySelectorAll('.delete-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const idx = parseInt(e.target.getAttribute('data-index'));
+                globalBooks.splice(idx, 1);
+                globalBooks = globalBooks.map((item, i) => normalizeBookData(item, i));
+                updateStorageAndRender(globalBooks);
+            });
         });
     }
 
-    searchInput.oninput = () => renderTable(globalBooks);
+    searchInput.addEventListener('input', () => renderTable(globalBooks));
 
-    // نموذج بيانات محاكي
-    document.getElementById('loadSampleBtn').onclick = () => {
-        const mock = [
-            { inventoryNo: "000001", isbn: "9789953270111", title: "مقدمة ابن خلدون", author: "ابن خلدون", publisher: "دار الفكر", place: "بيروت", year: "2018", pages: "650", language: "العربية", category: "تاريخ وفلسفة", subjects: "تاريخ، اجتماع", location: "مكتبة A1", status: "متاح", summary: "كتاب مؤسس لعلم الاجتماع" },
-            { inventoryNo: "000002", isbn: "9789771421008", title: "عبقرية عمر", author: "عباس محمود العقاد", publisher: "نهضة مصر", place: "القاهرة", year: "2020", pages: "240", language: "العربية", category: "سير وتراجم", subjects: "تاريخ إسلامي", location: "مكتبة B2", status: "متاح", summary: "دراسة شخصية الفاروق عمر" }
+    extractBtn.addEventListener('click', () => {
+        const raw = inputText.value.trim();
+        if (!raw) return showToast('⚠️ يرجى أدخال بيانات الكتاب أولاً');
+
+        const lines = raw.split('\n');
+        lines.forEach(line => {
+            const parts = line.split('—').map(p => p.trim());
+            addNewBookRecord(parts[0] || 'كتاب جديد', parts[1] || 'غير محدد', parts[2] || 'غير محدد', '—', '—', '0', '');
+        });
+        inputText.value = '';
+    });
+
+    // بيانات محاكاة تجريبية
+    loadSampleBtn.addEventListener('click', () => {
+        const sampleMock = [
+            { title: "مقدمة ابن خلدون", author: "ابن خلدون", publisher: "دار الفكر", publicationPlace: "بيروت", edition: "الثانية", publishYear: "2018", isbn13: "9789953270111", pages: "650", category: "تاريخ وفلسفة" },
+            { title: "عبقرية عمر", author: "عباس محمود العقاد", publisher: "نهضة مصر", publicationPlace: "القاهرة", edition: "الأولى", publishYear: "2020", isbn13: "9789771421008", pages: "240", category: "سير وتراجم" }
         ];
-        updateData(mock);
-        showToast('📋 تم تحميل البيانات المحاكية بنجاح');
-    };
 
-    document.getElementById('clearAllBtn').onclick = () => {
-        if (confirm("حذف جميع السجلات؟")) {
-            updateData([]);
-            showToast('🗑️ تم التفريغ بنجاح');
+        globalBooks = sampleMock.map((b, i) => normalizeBookData(b, i));
+        updateStorageAndRender(globalBooks);
+        showToast('📋 تم تحميل البيانات المحاكية المنسقة');
+    });
+
+    clearBtn.addEventListener('click', () => {
+        if (confirm("هل أنت تأكد من مسح كافة السجلات؟")) {
+            if (isFirebaseConnected && booksRef) remove(booksRef);
+            localStorage.removeItem('tidybooks_data');
+            globalBooks = [];
+            renderTable([]);
+            showToast('🗑️ تم مسح جميع البيانات');
         }
-    };
+    });
 
-    // التصدير الإجباري للإكسل بالتنسيق المحدد
-    document.getElementById('exportExcelBtn').onclick = () => {
+    // تصدير ملف الإكسل المنسق
+    exportExcelBtn.addEventListener('click', () => {
         if (globalBooks.length === 0) return showToast('⚠️ لا توجد بيانات للتصدير');
 
         const wb = XLSX.utils.book_new();
+
         const headers = [
-            'رقم الجرد', 'ISBN / الباركود', 'اسم الكتاب', 'المؤلف', 
-            'الناشر', 'مكان النشر', 'سنة النشر', 'عدد الصفحات', 
-            'اللغة', 'التصنيف', 'الموضوعات', 'الموقع بالمكتبة', 'الحالة', 'الملخص/الفهرس'
+            'م', 'رقم الجرد', 'اسم الكتاب', 'المؤلف', 'دار النشر', 
+            'مكان النشر', 'الطبعة', 'سنة النشر', 'رمز الباركود (ISBN-13)', 
+            'التصنيف', 'عدد الصفحات', 'حالة الاستعارة'
         ];
 
-        const rows = globalBooks.map(b => [
-            b.inventoryNo, b.isbn, b.title, b.author,
-            b.publisher, b.place, b.year, Number(b.pages),
-            b.language, b.category, b.subjects, b.location, b.status, b.summary
+        const dataRows = globalBooks.map((b) => [
+            b.seqNo,
+            b.inventoryNo,
+            b.title,
+            b.author,
+            b.publisher,
+            b.publicationPlace,
+            b.edition,
+            b.publishYear,
+            b.isbn13,
+            b.category,
+            Number(b.pages),
+            b.status
         ]);
 
-        const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
+        const ws = XLSX.utils.aoa_to_sheet([headers, ...dataRows]);
+
+        const thinBorder = {
+            top: { style: "thin", color: { rgb: "CBD5E1" } },
+            bottom: { style: "thin", color: { rgb: "CBD5E1" } },
+            left: { style: "thin", color: { rgb: "CBD5E1" } },
+            right: { style: "thin", color: { rgb: "CBD5E1" } }
+        };
+
+        const headerStyle = {
+            font: { name: "Tajawal", sz: 11, bold: true, color: { rgb: "FFFFFF" } },
+            fill: { fgColor: { rgb: "1E3A8A" } },
+            alignment: { horizontal: "center", vertical: "center" },
+            border: thinBorder
+        };
+
         ws['!views'] = [{ RTL: true }];
 
-        const thinBorder = { top: {style:"thin", color:{rgb:"CBD5E1"}}, bottom: {style:"thin", color:{rgb:"CBD5E1"}}, left: {style:"thin", color:{rgb:"CBD5E1"}}, right: {style:"thin", color:{rgb:"CBD5E1"}} };
-
         const range = XLSX.utils.decode_range(ws['!ref']);
+
         for (let R = range.s.r; R <= range.e.r; ++R) {
             for (let C = range.s.c; C <= range.e.c; ++C) {
-                const cell = XLSX.utils.encode_cell({r:R, c:C});
-                if (!ws[cell]) continue;
+                const cellAddress = XLSX.utils.encode_cell({ r: R, c: C });
+                if (!ws[cellAddress]) continue;
 
                 if (R === 0) {
-                    ws[cell].s = {
-                        font: { name: "Tajawal", sz: 11, bold: true, color: { rgb: "FFFFFF" } },
-                        fill: { fgColor: { rgb: "1E3A8A" } },
-                        alignment: { horizontal: "center", vertical: "center" },
-                        border: thinBorder
-                    };
+                    ws[cellAddress].s = headerStyle;
                 } else {
-                    ws[cell].z = (C === 0 || C === 1) ? "@" : (C === 7 ? "#,##0" : "@");
-                    ws[cell].s = {
-                        font: { name: "Tajawal", sz: 10, color: { rgb: "0F172A" } },
-                        fill: { fgColor: { rgb: R % 2 === 0 ? "F8FAFC" : "FFFFFF" } },
-                        alignment: { horizontal: (C===0||C===1||C===7||C===12) ? "center" : "right", vertical: "center" },
+                    const isEven = R % 2 === 0;
+                    let cellFormat = "@";
+                    let align = "right";
+
+                    if (C === 0 || C === 10) {
+                        cellFormat = "#,##0";
+                        align = "center";
+                    } else if (C === 1 || C === 8) {
+                        cellFormat = "@";
+                        align = "center";
+                    }
+
+                    ws[cellAddress].z = cellFormat;
+                    ws[cellAddress].s = {
+                        font: { name: "Tajawal", sz: 10, color: { rgb: "1E293B" } },
+                        fill: { fgColor: { rgb: isEven ? "F8FAFC" : "FFFFFF" } },
+                        alignment: { horizontal: align, vertical: "center" },
                         border: thinBorder
                     };
                 }
             }
         }
 
-        ws['!cols'] = [{wch:12},{wch:18},{wch:30},{wch:22},{wch:20},{wch:15},{wch:12},{wch:12},{wch:12},{wch:15},{wch:20},{wch:15},{wch:12},{wch:30}];
+        ws['!cols'] = [
+            { wch: 6 },  { wch: 15 }, { wch: 30 }, { wch: 22 }, 
+            { wch: 20 }, { wch: 15 }, { wch: 12 }, { wch: 12 }, 
+            { wch: 20 }, { wch: 15 }, { wch: 12 }, { wch: 15 }
+        ];
 
-        XLSX.utils.book_append_sheet(wb, ws, "سجل جرد المكتبة");
-        XLSX.writeFile(wb, `جرد_المكتبة_${new Date().toISOString().split('T')[0]}.xlsx`);
-        showToast('📊 تم تصدير ملف Excel بنجاح والتنسيق الإجباري');
-    };
+        XLSX.utils.book_append_sheet(wb, ws, "فهرس المكتبة الموحد");
+        XLSX.writeFile(wb, `فهرس_المكتبة_${new Date().toISOString().split('T')[0]}.xlsx`);
+        showToast('📊 تم تصدير ملف Excel بتنسيق دقيق وموحد');
+    });
 </script>
 </body>
 </html>
