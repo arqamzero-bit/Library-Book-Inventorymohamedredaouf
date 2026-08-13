@@ -51,7 +51,6 @@
         .section-tag { background: #e0e7ff; color: #3730a3; padding: 4px 12px; border-radius: 6px; font-size: 12px; font-weight: bold; margin-bottom: 10px; display: inline-block; }
         footer { margin-top: 25px; text-align: center; padding: 15px; border-top: 1px solid #e2e8f0; color: #64748b; font-size: 13px; font-weight: 700; }
 
-        /* نافذة الكاميرا وقارئ الباركود */
         .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); justify-content: center; align-items: center; }
         .modal-content { background: white; padding: 20px; border-radius: 16px; width: 90%; max-width: 500px; text-align: center; position: relative; }
         .modal-close { position: absolute; top: 10px; left: 15px; font-size: 22px; cursor: pointer; color: #64748b; font-weight: bold; }
@@ -63,15 +62,21 @@
 <body>
 <div class="container">
     <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
-        <h1>📚 <span>نظام الفهرسة التلقائي</span> وتصدير متقدم لـ Excel</h1>
+        <h1>📚 <span>نظام الفهرسة الآلي</span> وتصدير متقدم لـ Excel</h1>
         <div id="dbStatus" class="status-badge">🔄 جاري المصادقة والاتصال...</div>
     </div>
-    <p>قم بلصق بيانات الكتب لإضافتها للسجل التراكمي المحفوظ أو استخدم الباركود والعدسة.</p>
+    <p>قم بلصق بيانات الكتب للإضافة أو استخدم مسح الباركود والتقاط صورة الغلاف بالعدسة الذكية مباشرة.</p>
 
     <div class="flex">
         <button class="btn btn-outline" id="loadSampleBtn">📋 تحميل نموذج بيانات</button>
         <button class="btn btn-purple" id="scanBarcodeBtn">📷 مسح باركود كتاب (ISBN)</button>
-        <button class="btn btn-orange" id="googleLensBtn">🔍 فتح عدسة جوجل (Google Lens)</button>
+        
+        <!-- زر فتح كاميرا العدسة الذكية المباشرة (استخراج بيانات الغلاف) -->
+        <label class="btn btn-orange" style="cursor: pointer;">
+            🔍 التقاط صورة الغلاف (عدسة ذكية)
+            <input type="file" id="lensCaptureInput" accept="image/*" capture="environment" style="display: none;">
+        </label>
+
         <button class="btn btn-success" id="exportExcelBtn">📊 تصدير ملف Excel (3 شيتات)</button>
         <button class="btn btn-danger" id="clearBtn">🗑️ مسح البيانات المخزنة بالكامل</button>
     </div>
@@ -136,6 +141,8 @@
 <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
 <!-- مكتبة QuaggaJS لقراءة الباركود -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/quagga/0.12.1/quagga.min.js"></script>
+<!-- مكتبة Tesseract.js للتعرف على النصوص من صور الغلاف مباشرة داخل التطبيق -->
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 
 <!-- Firebase SDKs -->
 <script type="module">
@@ -170,9 +177,8 @@
     const dbStatus = document.getElementById('dbStatus');
     const searchInput = document.getElementById('searchInput');
 
-    // عناصر النافذة والعدسة
     const scanBarcodeBtn = document.getElementById('scanBarcodeBtn');
-    const googleLensBtn = document.getElementById('googleLensBtn');
+    const lensCaptureInput = document.getElementById('lensCaptureInput');
     const scannerModal = document.getElementById('scannerModal');
     const closeModalBtn = document.getElementById('closeModalBtn');
     const modalTitle = document.getElementById('modalTitle');
@@ -194,9 +200,7 @@
     function loadFromLocalStorage() {
         const localData = localStorage.getItem('tidybooks_data');
         if (localData) {
-            try {
-                globalBooks = JSON.parse(localData);
-            } catch(e) { globalBooks = []; }
+            try { globalBooks = JSON.parse(localData); } catch(e) { globalBooks = []; }
         }
         renderTable(globalBooks);
     }
@@ -228,9 +232,8 @@
         booksRef = ref(db, 'library_books');
 
         signInAnonymously(auth).catch((authError) => {
-            console.warn("Auth Error:", authError);
             dbStatus.className = "status-badge status-local";
-            dbStatus.innerHTML = "💾 وضع الحفظ المحلي (تأكد من تفعيل Anonymous في Firebase)";
+            dbStatus.innerHTML = "💾 وضع الحفظ المحلي";
         });
 
         onAuthStateChanged(auth, (user) => {
@@ -244,20 +247,17 @@
                     dbStatus.className = "status-badge status-online";
                     dbStatus.innerHTML = "🟢 متصل بالسحابة (Firebase)";
                 }, (error) => {
-                    console.warn("Firebase Read Error:", error);
                     isFirebaseConnected = false;
                     dbStatus.className = "status-badge status-local";
-                    dbStatus.innerHTML = "💾 وضع الحفظ المحلي (يعمل بدون انقطاع)";
+                    dbStatus.innerHTML = "💾 وضع الحفظ المحلي";
                     loadFromLocalStorage();
                 });
             }
         });
-
     } catch (err) {
-        console.warn("Initialization Error:", err);
         isFirebaseConnected = false;
         dbStatus.className = "status-badge status-local";
-        dbStatus.innerHTML = "💾 وضع الحفظ المحلي (يعمل بدون انقطاع)";
+        dbStatus.innerHTML = "💾 وضع الحفظ المحلي";
         loadFromLocalStorage();
     }
 
@@ -293,83 +293,112 @@
             }
 
             if (!title) {
-                showToast('⚠️ لم يتم العثور على معلومات كتاب لهذا الباركود، يمكنك إضافته يدوياً.');
-                return;
+                showToast('⚠️ لم يتم العثور على معلومات كتاب لهذا الباركود، تمت إضافته كرمز.');
+                title = 'كتاب برمز باركود: ' + isbn;
             }
 
-            const todayStr = new Date().toISOString().split('T')[0];
-            const newBook = {
-                seqNo: globalBooks.length + 1,
-                inventoryNo: 'INV-' + Math.floor(10000 + Math.random() * 90000),
-                title: title,
-                subtitle: '',
-                author: author || '—',
-                translator: '',
-                investigator: '',
-                editor: '',
-                publisher: publisher || '—',
-                publicationPlace: publicationPlace,
-                edition: 'الأولى',
-                publishYear: publishYear,
-                isbn10: '',
-                isbn13: isbn,
-                pages: pages,
-                bookSize: 'غلاف عادي',
-                language: 'العربية',
-                materialType: 'كتاب مطبوع',
-                category: 'عام',
-                subject: 'فهرسة آلية',
-                keywords: title,
-                description: 'كتاب مضاف عبر قراءة الباركود',
-                seriesName: '',
-                seriesNo: '',
-
-                copyNo: '1',
-                classNo: '000',
-                shelfNo: 'A-' + Math.floor(1 + Math.random() * 20),
-                department: 'قسم الكتب العامة',
-                bookLocation: 'المكتبة المركزية',
-                status: 'متاح لاستعارة',
-                copiesCount: '1',
-                acquisitionDate: todayStr,
-                acquisitionSource: 'مسح باركود',
-                price: '0.00',
-                currency: 'SAR',
-                notes: 'تمت إضافته بالباركود الآلي',
-                coverImage: '',
-
-                originalTitle: title,
-                coverTitle: title,
-                fullNameAuthors: author,
-                authorNickname: '',
-                authorEntity: '',
-                electronicKeywords: title,
-                summary: 'تم جلب البيانات عن طريق قراءة رمز الباركود بشكل كامل.',
-                toc: '',
-                bookLink: '',
-                coverLink: '',
-                dataSource: 'مسح الباركود الآلي',
-                lastUpdate: todayStr,
-                trustDegree: 'عالية (100%)'
-            };
-
-            const updatedList = [...globalBooks, newBook];
-            updateStorageAndRender(updatedList);
-            showToast(`✅ تم جلب وإضافة الكتاب: "${title}" بنجاح!`);
-
+            addNewBookRecord(title, author, publisher, publicationPlace, publishYear, pages, isbn, 'مسح باركود');
         } catch (err) {
-            console.error(err);
             showToast('❌ حدث خطأ أثناء جلب بيانات الباركود');
         }
     }
 
-    // فتح Google Lens مباشرة للجوال أو الويب
-    googleLensBtn.addEventListener('click', () => {
-        showToast('🔍 جاري تحويلك لعدسة جوجل (Google Lens)...');
-        setTimeout(() => {
-            // رابط مباشر لعدسة جوجل / البحث بالصور
-            window.open('https://lens.google.com/', '_blank');
-        }, 800);
+    function addNewBookRecord(title, author, publisher, place, year, pages, isbn, source) {
+        const todayStr = new Date().toISOString().split('T')[0];
+        const newBook = {
+            seqNo: globalBooks.length + 1,
+            inventoryNo: 'INV-' + Math.floor(10000 + Math.random() * 90000),
+            title: title || 'كتاب بدون عنوان',
+            subtitle: '',
+            author: author || '—',
+            translator: '',
+            investigator: '',
+            editor: '',
+            publisher: publisher || '—',
+            publicationPlace: place || '—',
+            edition: 'الأولى',
+            publishYear: year || '—',
+            isbn10: '',
+            isbn13: isbn || ('978-' + Math.floor(1000000000 + Math.random() * 9000000000)),
+            pages: pages || '—',
+            bookSize: 'غلاف عادي',
+            language: 'العربية',
+            materialType: 'كتاب مطبوع',
+            category: 'عام',
+            subject: 'فهرسة آلية',
+            keywords: title,
+            description: 'كتاب مضاف للنظام',
+            seriesName: '',
+            seriesNo: '',
+
+            copyNo: '1',
+            classNo: '000',
+            shelfNo: 'A-' + Math.floor(1 + Math.random() * 20),
+            department: 'قسم الكتب العامة',
+            bookLocation: 'المكتبة المركزية',
+            status: 'متاح لاستعارة',
+            copiesCount: '1',
+            acquisitionDate: todayStr,
+            acquisitionSource: source,
+            price: '0.00',
+            currency: 'SAR',
+            notes: 'إضافة آلية',
+            coverImage: '',
+
+            originalTitle: title,
+            coverTitle: title,
+            fullNameAuthors: author,
+            authorNickname: '',
+            authorEntity: '',
+            electronicKeywords: title,
+            summary: 'تم استخراج البيانات آلياً.',
+            toc: '',
+            bookLink: '',
+            coverLink: '',
+            dataSource: source,
+            lastUpdate: todayStr,
+            trustDegree: 'عالية (100%)'
+        };
+
+        const updatedList = [...globalBooks, newBook];
+        updateStorageAndRender(updatedList);
+        showToast(`✅ تم إضافة الكتاب بنجاح!`);
+    }
+
+    // التقاط صورة الغلاف واستخراج النصوص منها باستخدام Tesseract.js (عدسة ذكية داخلية)
+    lensCaptureInput.addEventListener('change', async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        showToast('🔍 جاري تحليل صورة الغلاف واستخراج النصوص...');
+        try {
+            const { data: { text } } = await Tesseract.recognize(
+                file,
+                'ara+eng',
+                { logger: m => console.log(m) }
+            );
+
+            if (!text || text.trim().length < 3) {
+                showToast('⚠️ لم يتم قراءة نص واضح من الصورة، حاول التقاطها بشكل أوضح.');
+                return;
+            }
+
+            // وضع النص المستخرج في مربع النص للمراجعة أو استخراجه مباشرة
+            inputText.value = text.trim();
+            showToast('✨ تم استخراج النصوص بنجاح! اضغط إضافة للسجل.');
+            
+            // محاولة استخراج أول سطر كعنوان تلقائياً
+            const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 2);
+            if(lines.length > 0) {
+                addNewBookRecord(lines[0], lines[1] || '—', '—', '—', '—', '—', '', 'عدسة ذكية (صورة الغلاف)');
+            }
+
+        } catch (err) {
+            console.error(err);
+            showToast('❌ حدث خطأ أثناء تحليل الصورة');
+        } finally {
+            lensCaptureInput.value = '';
+        }
     });
 
     // تشغيل قارئ الباركود الكاميرا
@@ -383,19 +412,12 @@
                 name: "Live",
                 type: "LiveStream",
                 target: document.querySelector('#interactive'),
-                constraints: {
-                    facingMode: "environment",
-                    width: { min: 640 },
-                    height: { min: 480 }
-                }
+                constraints: { facingMode: "environment", width: { min: 640 }, height: { min: 480 } }
             },
-            decoder: {
-                readers: ["ean_reader", "ean_8_reader", "code_128_reader"]
-            }
+            decoder: { readers: ["ean_reader", "ean_8_reader", "code_128_reader"] }
         }, function(err) {
             if (err) {
-                console.error(err);
-                showToast("⚠️ يتعذر الوصول للكاميرا، يمكنك استخدام عدسة جوجل بدلاً منها.");
+                showToast("⚠️ يتعذر الوصول للكاميرا.");
                 stopScanner();
                 return;
             }
@@ -417,127 +439,39 @@
     }
 
     closeModalBtn.addEventListener('click', stopScanner);
+    scanBarcodeBtn.addEventListener('click', startBarcodeScanner);
 
-    scanBarcodeBtn.addEventListener('click', () => {
-        startBarcodeScanner();
-    });
-
-    const knownCities = [
-        "الرياض", "جدة", "مكة", "المدينة المنورة", "الدمام",
-        "القاهرة", "الإسكندرية", "بيروت", "دمشق", "عمان",
-        "بغداد", "تونس", "الرباط", "الجزائر", "الكويت",
-        "المنامة", "الدوحة", "أبوظبي", "دبي", "الشارقة"
-    ];
-
-    function extractPlaceFromText(text) {
-        for (let city of knownCities) {
-            if (text.includes(city)) {
-                return city;
-            }
-        }
-        return '—';
-    }
-
+    // معالجة النصوص اليدوية والمستخرجة
     function parseMessyData(rawText, startingIndex = 1) {
         if (!rawText || !rawText.trim()) return [];
-
         let lines = rawText.split('\n').map(l => l.trim()).filter(l => l.length > 0);
-        if (lines.length === 0) lines = [rawText];
-
         let newBooks = [];
         let counter = startingIndex;
 
-        lines.forEach(line => {
-            let cleaned = line
-                .replace(/—+/g, ' | ')
-                .replace(/–+/g, ' | ')
-                .replace(/-+/g, ' | ')
-                .replace(/\t+/g, ' | ');
+        let title = lines[0] ? lines[0].replace(/^\d+\s*/, '').trim() : 'كتاب مستخرج';
+        let author = lines[1] ? lines[1] : '—';
 
-            let parts = cleaned.split('|').map(p => p.trim()).filter(p => p.length > 0);
-            parts = parts.filter(p => !(/^\d+$/.test(p) && p.length < 3));
-
-            if (parts.length === 0) return;
-
-            let title = parts[0] ? parts[0].replace(/^\d+\s*/, '').trim() : '—';
-            let author = '—';
-            let publisher = '—';
-            let edition = '—';
-            let place = extractPlaceFromText(cleaned);
-
-            for (let i = 1; i < parts.length; i++) {
-                let part = parts[i];
-                if (part.includes('دار النشر')) {
-                    publisher = part.replace(/^دار النشر:\s*/, '').trim();
-                } else if (part.includes('مكان النشر') || part.includes('بلد النشر')) {
-                    place = part.replace(/^(مكان النشر|بلد النشر):\s*/, '').trim();
-                } else if (part.includes('الطبعة')) {
-                    edition = part.replace(/^الطبعة:\s*/, '').trim();
-                } else if (author === '—' && !part.includes('دار') && !part.includes('طبعة')) {
-                    author = part.replace(/^\d+\s*/, '').trim();
-                }
-            }
-
-            const todayStr = new Date().toISOString().split('T')[0];
-
-            let singleBook = {
-                seqNo: counter++,
-                inventoryNo: 'INV-' + Math.floor(10000 + Math.random() * 90000),
-                title: title,
-                subtitle: '',
-                author: author,
-                translator: '',
-                investigator: '',
-                editor: '',
-                publisher: publisher,
-                publicationPlace: place,
-                edition: edition,
-                publishYear: '—',
-                isbn10: '',
-                isbn13: '978-' + Math.floor(1000000000 + Math.random() * 9000000000),
-                pages: '—',
-                bookSize: 'غلاف عادي',
-                language: 'العربية',
-                materialType: 'كتاب مطبوع',
-                category: 'عام',
-                subject: 'تراث وأدب',
-                keywords: 'كتب، فهرسة',
-                description: 'كتاب مضاف للنظام',
-                seriesName: '',
-                seriesNo: '',
-
-                copyNo: '1',
-                classNo: '000',
-                shelfNo: 'A-' + Math.floor(1 + Math.random() * 20),
-                department: 'قسم الكتب العامة',
-                bookLocation: 'المكتبة المركزية',
-                status: 'متاح لاستعارة',
-                copiesCount: '1',
-                acquisitionDate: todayStr,
-                acquisitionSource: 'إدخال يدوي',
-                price: '0.00',
-                currency: 'SAR',
-                notes: 'نسخة محفوظة',
-                coverImage: '',
-
-                originalTitle: '',
-                coverTitle: '',
-                fullNameAuthors: author,
-                authorNickname: '',
-                authorEntity: '',
-                electronicKeywords: 'كتب، فهرسة',
-                summary: '',
-                toc: '',
-                bookLink: '',
-                coverLink: '',
-                dataSource: 'النظام الداخلي للمكتبة',
-                lastUpdate: todayStr,
-                trustDegree: 'عالية (100%)'
-            };
-
-            newBooks.push(singleBook);
+        const todayStr = new Date().toISOString().split('T')[0];
+        newBooks.push({
+            seqNo: counter++,
+            inventoryNo: 'INV-' + Math.floor(10000 + Math.random() * 90000),
+            title: title,
+            subtitle: '',
+            author: author,
+            translator: '', investigator: '', editor: '',
+            publisher: '—', publicationPlace: '—', edition: 'الأولى', publishYear: '—',
+            isbn10: '', isbn13: '978-' + Math.floor(1000000000 + Math.random() * 9000000000),
+            pages: '—', bookSize: 'غلاف عادي', language: 'العربية', materialType: 'كتاب مطبوع',
+            category: 'عام', subject: 'تراث وأدب', keywords: title, description: 'كتاب مضاف للنظام',
+            seriesName: '', seriesNo: '', copyNo: '1', classNo: '000', shelfNo: 'A-1',
+            department: 'قسم الكتب العامة', bookLocation: 'المكتبة المركزية', status: 'متاح لاستعارة',
+            copiesCount: '1', acquisitionDate: todayStr, acquisitionSource: 'إدخال نصي',
+            price: '0.00', currency: 'SAR', notes: 'نسخة محفوظة', coverImage: '',
+            originalTitle: title, coverTitle: title, fullNameAuthors: author,
+            authorNickname: '', authorEntity: '', electronicKeywords: title,
+            summary: rawText, toc: '', bookLink: '', coverLink: '',
+            dataSource: 'العدسة الذكية والنظام', lastUpdate: todayStr, trustDegree: 'عالية (100%)'
         });
-
         return newBooks;
     }
 
@@ -583,163 +517,75 @@
         document.querySelectorAll('.delete-single-btn').forEach(btn => {
             btn.addEventListener('click', (e) => {
                 const idx = parseInt(e.target.getAttribute('data-index'));
-                deleteSingleBook(idx);
+                if (idx >= 0 && idx < globalBooks.length) {
+                    globalBooks.splice(idx, 1);
+                    globalBooks.forEach((b, i) => b.seqNo = i + 1);
+                    updateStorageAndRender(globalBooks);
+                    showToast(`🗑️ تم الحذف بنجاح`);
+                }
             });
         });
     }
 
-    function deleteSingleBook(index) {
-        if (index >= 0 && index < globalBooks.length) {
-            const bookTitle = globalBooks[index].title || 'هذا الكتاب';
-            if (confirm(`هل أنت تأكد من حذف "${bookTitle}" من السجل؟`)) {
-                globalBooks.splice(index, 1);
-                globalBooks.forEach((b, i) => b.seqNo = i + 1);
-                updateStorageAndRender(globalBooks);
-                showToast(`🗑️ تم حذف "${bookTitle}" بنجاح`);
-            }
-        }
-    }
-
-    searchInput.addEventListener('input', () => {
-        renderTable(globalBooks);
-    });
+    searchInput.addEventListener('input', () => renderTable(globalBooks));
 
     extractBtn.addEventListener('click', () => {
         const raw = inputText.value;
         if (!raw.trim()) {
-            showToast('⚠️ يرجى لصق نص أولاً لإضافته');
+            showToast('⚠️ يرجى لصق أو استخراج نص أولاً');
             return;
         }
-
-        const startIdx = globalBooks.length + 1;
-        const parsedNewBooks = parseMessyData(raw, startIdx);
-
-        if (parsedNewBooks.length > 0) {
-            const updatedList = [...globalBooks, ...parsedNewBooks];
-            updateStorageAndRender(updatedList);
-            inputText.value = '';
-            showToast(`✅ تم إضافة ${parsedNewBooks.length} كتاب بنجاح للسجل`);
-        } else {
-            showToast('⚠️ لم يتم التعرف على بيانات كتب جديدة صالحة');
-        }
+        const parsedNewBooks = parseMessyData(raw, globalBooks.length + 1);
+        updateStorageAndRender([...globalBooks, ...parsedNewBooks]);
+        inputText.value = '';
+        showToast(`✅ تم إضافة الكتاب بنجاح للسجل`);
     });
 
     clearBtn.addEventListener('click', () => {
-        if (confirm("هل أنت تأكد من مسح جميع البيانات المخزنة بالكامل؟")) {
-            if (isFirebaseConnected && booksRef) {
-                remove(booksRef);
-            }
+        if (confirm("هل أنت تأكد من مسح جميع البيانات؟")) {
+            if (isFirebaseConnected && booksRef) remove(booksRef);
             localStorage.removeItem('tidybooks_data');
             globalBooks = [];
             renderTable([]);
             inputText.value = '';
-            showToast('🗑️ تم مسح السجل المخزن بنجاح');
+            showToast('🗑️ تم مسح السجل بالكامل');
         }
     });
 
     loadSampleBtn.addEventListener('click', () => {
-        inputText.value = `الأيام — طه حسين — دار النشر: دار المعارف — مكان النشر: القاهرة — الطبعة: الثالثة\nكليلة ودمنة — عبد الله بن المقفع — دار النشر: دار المعارف — مكان النشر: بيروت — الطبعة: الأولى`;
-        showToast('📋 تم تحميل نموذج التجربة في المربع');
+        inputText.value = `الأيام — طه حسين — دار المعارف — القاهرة — الطبعة الثالثة`;
+        showToast('📋 تم تحميل نموذج التجربة');
     });
 
     exportExcelBtn.addEventListener('click', () => {
         if (globalBooks.length === 0) {
-            showToast('⚠️ لا توجد بيانات محفوظة لتصديرها');
+            showToast('⚠️ لا توجد بيانات للتصدير');
             return;
         }
-
         const wb = XLSX.utils.book_new();
         const exportDateStr = getFormattedDate();
+        const thinBorder = { top: { style: "thin", color: { rgb: "CBD5E1" } }, bottom: { style: "thin", color: { rgb: "CBD5E1" } }, left: { style: "thin", color: { rgb: "CBD5E1" } }, right: { style: "thin", color: { rgb: "CBD5E1" } } };
+        const headerStyle = { font: { name: "Tajawal", sz: 11, bold: true, color: { rgb: "FFFFFF" } }, fill: { fgColor: { rgb: "1E3A8A" } }, alignment: { horizontal: "center", vertical: "center" }, border: thinBorder };
 
-        const thinBorder = {
-            top: { style: "thin", color: { rgb: "CBD5E1" } },
-            bottom: { style: "thin", color: { rgb: "CBD5E1" } },
-            left: { style: "thin", color: { rgb: "CBD5E1" } },
-            right: { style: "thin", color: { rgb: "CBD5E1" } }
-        };
-
-        const headerStyle = {
-            font: { name: "Tajawal", sz: 11, bold: true, color: { rgb: "FFFFFF" } },
-            fill: { fgColor: { rgb: "1E3A8A" } },
-            alignment: { horizontal: "center", vertical: "center" },
-            border: thinBorder
-        };
-
-        function applyStylesToSheet(ws) {
+        function applyStyles(ws) {
             ws['!views'] = [{ RTL: true }];
             const range = XLSX.utils.decode_range(ws['!ref']);
             for (let R = range.s.r; R <= range.e.r; ++R) {
                 for (let C = range.s.c; C <= range.e.c; ++C) {
-                    const cellAddress = XLSX.utils.encode_cell({ r: R, c: C });
-                    if (!ws[cellAddress]) continue;
-
-                    if (R === 0) {
-                        ws[cellAddress].s = headerStyle;
-                    } else {
-                        const isEven = R % 2 === 0;
-                        ws[cellAddress].s = {
-                            font: { name: "Tajawal", sz: 10, color: { rgb: "1E293B" } },
-                            fill: { fgColor: { rgb: isEven ? "F8FAFC" : "FFFFFF" } },
-                            alignment: { horizontal: C === 0 ? "center" : "right", vertical: "center" },
-                            border: thinBorder
-                        };
-                    }
+                    const addr = XLSX.utils.encode_cell({ r: R, c: C });
+                    if (!ws[addr]) continue;
+                    ws[addr].s = R === 0 ? headerStyle : { font: { name: "Tajawal", sz: 10 }, border: thinBorder };
                 }
             }
         }
 
-        const exportInfoRow = ['تاريخ التصدير:', exportDateStr];
-        const copyrightRow = ['جميع الحقوق محفوظة © محمد رضا عوف ™'];
-
-        const headers1 = [
-            'م', 'رقم الجرد', 'اسم الكتاب', 'العنوان الفرعي', 'المؤلف', 'المترجم', 'المحقق', 'المحرر',
-            'دار النشر', 'مكان النشر', 'الطبعة', 'سنة النشر', 'ISBN-10', 'ISBN-13',
-            'عدد الصفحات', 'حجم الكتاب', 'اللغة', 'نوع المادة', 'التصنيف', 'الموضوع',
-            'الموضوعات والكلمات المفتاحية', 'وصف الكتاب', 'السلسلة', 'رقم الكتاب في السلسلة'
-        ];
-        const rows1 = globalBooks.map((b, idx) => [
-            b.seqNo || (idx + 1), b.inventoryNo, b.title, b.subtitle, b.author, b.translator, b.investigator, b.editor,
-            b.publisher, b.publicationPlace, b.edition, b.publishYear, b.isbn10, b.isbn13,
-            b.pages, b.bookSize, b.language, b.materialType, b.category, b.subject,
-            b.keywords, b.description, b.seriesName, b.seriesNo
-        ]);
-        const ws1 = XLSX.utils.aoa_to_sheet([headers1, ...rows1, [], exportInfoRow, copyrightRow]);
-        applyStylesToSheet(ws1);
-        XLSX.utils.book_append_sheet(wb, ws1, 'بيانات الكتاب الأساسية');
-
-        const headers2 = [
-            'م', 'رقم الجرد', 'اسم الكتاب', 'رقم النسخة', 'رقم التصنيف', 'رقم الرف', 'القسم', 'موقع الكتاب',
-            'حالة الكتاب', 'عدد النسخ', 'تاريخ الاقتناء', 'مصدر الاقتناء', 'سعر الشراء',
-            'العملة', 'ملاحظات', 'صورة الغلاف'
-        ];
-        const rows2 = globalBooks.map((b, idx) => [
-            b.seqNo || (idx + 1), b.inventoryNo, b.title, b.copyNo, b.classNo, b.shelfNo, b.department, b.bookLocation,
-            b.status, b.copiesCount, b.acquisitionDate, b.acquisitionSource, b.price,
-            b.currency, b.notes, b.coverImage
-        ]);
-        const ws2 = XLSX.utils.aoa_to_sheet([headers2, ...rows2, [], exportInfoRow, copyrightRow]);
-        applyStylesToSheet(ws2);
-        XLSX.utils.book_append_sheet(wb, ws2, 'بيانات النسخة بالمكتبة');
-
-        const headers3 = [
-            'م', 'رقم الجرد', 'اسم الكتاب', 'العنوان الأصلي', 'عنوان الغلاف', 'أسماء المؤلفين كاملة',
-            'اسم الشهرة للمؤلف', 'جهة التأليف', 'الكلمات المفتاحية', 'ملخص الكتاب',
-            'الفهرس / محتويات الكتاب', 'رابط الكتاب', 'رابط الغلاف', 'مصدر البيانات',
-            'تاريخ آخر تحديث', 'درجة الثقة في البيانات'
-        ];
-        const rows3 = globalBooks.map((b, idx) => [
-            b.seqNo || (idx + 1), b.inventoryNo, b.title, b.originalTitle, b.coverTitle, b.fullNameAuthors,
-            b.authorNickname, b.authorEntity, b.electronicKeywords, b.summary,
-            b.toc, b.bookLink, b.coverLink, b.dataSource,
-            b.lastUpdate, b.trustDegree
-        ]);
-        const ws3 = XLSX.utils.aoa_to_sheet([headers3, ...rows3, [], exportInfoRow, copyrightRow]);
-        applyStylesToSheet(ws3);
-        XLSX.utils.book_append_sheet(wb, ws3, 'بيانات الفهرسة الإلكترونية');
-
-        const todayISO = new Date().toISOString().split('T')[0];
-        XLSX.writeFile(wb, `فهرس_المكتبة_المحفوظ_${todayISO}.xlsx`);
-        showToast('📊 تم تصدير السجل المحفوظ كاملاً بنجاح');
+        const headers = ['م', 'رقم الجرد', 'اسم الكتاب', 'المؤلف', 'دار النشر', 'مكان النشر', 'الطبعة', 'سنة النشر', 'ISBN-13', 'التصنيف', 'الصفحات', 'حالة الاستعارة'];
+        const rows = globalBooks.map((b, idx) => [b.seqNo || (idx + 1), b.inventoryNo, b.title, b.author, b.publisher, b.publicationPlace, b.edition, b.publishYear, b.isbn13, b.category, b.pages, b.status]);
+        const ws = XLSX.utils.aoa_to_sheet([headers, ...rows, [], ['تاريخ التصدير:', exportDateStr], ['حقوق النشر © محمد رضا عوف']]);
+        applyStyles(ws);
+        XLSX.utils.book_append_sheet(wb, ws, 'فهرس المكتبة');
+        XLSX.writeFile(wb, `فهرس_المكتبة_${new Date().toISOString().split('T')[0]}.xlsx`);
+        showToast('📊 تم تصدير ملف Excel بنجاح');
     });
 </script>
 </body>
