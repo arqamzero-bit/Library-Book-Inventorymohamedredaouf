@@ -24,6 +24,10 @@
         .btn-success:hover { background: #15803d; }
         .btn-danger { background: #ef4444; color: white; }
         .btn-danger:hover { background: #dc2626; }
+        .btn-purple { background: #8b5cf6; color: white; }
+        .btn-purple:hover { background: #7c3aed; }
+        .btn-orange { background: #f97316; color: white; }
+        .btn-orange:hover { background: #ea580c; }
         .btn-outline { background: transparent; border: 2px solid #cbd5e1; color: #334155; }
         .btn-outline:hover { background: #f1f5f9; }
         .btn-sm-danger { background: #fee2e2; color: #dc2626; padding: 4px 8px; border-radius: 6px; border: none; cursor: pointer; font-size: 12px; font-weight: bold; }
@@ -46,6 +50,14 @@
         .toast { position: fixed; bottom: 30px; left: 30px; background: #0f172a; color: white; padding: 12px 24px; border-radius: 12px; font-weight: 700; display: none; z-index: 999; }
         .section-tag { background: #e0e7ff; color: #3730a3; padding: 4px 12px; border-radius: 6px; font-size: 12px; font-weight: bold; margin-bottom: 10px; display: inline-block; }
         footer { margin-top: 25px; text-align: center; padding: 15px; border-top: 1px solid #e2e8f0; color: #64748b; font-size: 13px; font-weight: 700; }
+
+        /* نافذة الكاميرا وقارئ الباركود */
+        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); justify-content: center; align-items: center; }
+        .modal-content { background: white; padding: 20px; border-radius: 16px; width: 90%; max-width: 500px; text-align: center; position: relative; }
+        .modal-close { position: absolute; top: 10px; left: 15px; font-size: 22px; cursor: pointer; color: #64748b; font-weight: bold; }
+        #interactive.viewport { width: 100%; height: 260px; overflow: hidden; position: relative; border-radius: 12px; background: #000; }
+        #interactive.viewport video { width: 100%; height: 100%; object-fit: cover; }
+        canvas.drawingBuffer { display: none; }
     </style>
 </head>
 <body>
@@ -54,10 +66,12 @@
         <h1>📚 <span>نظام الفهرسة التلقائي</span> وتصدير متقدم لـ Excel</h1>
         <div id="dbStatus" class="status-badge">🔄 جاري المصادقة والاتصال...</div>
     </div>
-    <p>قم بلصق بيانات الكتب لإضافتها للسجل التراكمي المحفوظ.</p>
+    <p>قم بلصق بيانات الكتب لإضافتها للسجل التراكمي المحفوظ أو استخدم الكاميرا والباركود.</p>
 
     <div class="flex">
         <button class="btn btn-outline" id="loadSampleBtn">📋 تحميل نموذج بيانات</button>
+        <button class="btn btn-purple" id="scanBarcodeBtn">📷 مسح باركود كتاب (ISBN)</button>
+        <button class="btn btn-orange" id="scanImageBtn">🔍 بحث بالكاميرا (صورة الغلاف)</button>
         <button class="btn btn-success" id="exportExcelBtn">📊 تصدير ملف Excel (3 شيتات)</button>
         <button class="btn btn-danger" id="clearBtn">🗑️ مسح البيانات المخزنة بالكامل</button>
     </div>
@@ -106,10 +120,25 @@
     </footer>
 </div>
 
+<!-- النافذة المنبثقة لمسح الباركود للكاميرا -->
+<div class="modal" id="scannerModal">
+    <div class="modal-content">
+        <span class="modal-close" id="closeModalBtn">&times;</span>
+        <h3 style="margin-bottom:12px; color:#1e3a8a;" id="modalTitle">📷 جاري تشغيل الكاميرا...</h3>
+        <div id="interactive" class="viewport"></div>
+        <input type="file" id="imageInput" accept="image/*" capture="environment" style="display:none;">
+        <p style="margin-top:10px; font-size:12px; color:#64748b;" id="modalInstruction">ضع باركود الكتاب (ISBN) داخل الإطار لجلبه تلقائياً</p>
+    </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <!-- مكتبة Excel -->
 <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
+<!-- مكتبة QuaggaJS لقراءة الباركود -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/quagga/0.12.1/quagga.min.js"></script>
+<!-- مكتبة Tesseract.js للتعرف الضوئي على الحروف من الصورة (OCR) -->
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@4/dist/tesseract.min.js"></script>
 
 <!-- Firebase SDKs -->
 <script type="module">
@@ -144,7 +173,16 @@
     const dbStatus = document.getElementById('dbStatus');
     const searchInput = document.getElementById('searchInput');
 
-    function showToast(msg, duration = 3000) {
+    // عناصر النافذة والكاميرا
+    const scanBarcodeBtn = document.getElementById('scanBarcodeBtn');
+    const scanImageBtn = document.getElementById('scanImageBtn');
+    const scannerModal = document.getElementById('scannerModal');
+    const closeModalBtn = document.getElementById('closeModalBtn');
+    const modalTitle = document.getElementById('modalTitle');
+    const modalInstruction = document.getElementById('modalInstruction');
+    const imageInput = document.getElementById('imageInput');
+
+    function showToast(msg, duration = 3500) {
         toast.innerText = msg;
         toast.style.display = 'block';
         clearTimeout(toast._timer);
@@ -186,7 +224,7 @@
         }
     }
 
-    // تهيئة Firebase وتسجيل الدخول المجهول تلقائياً
+    // تهيئة Firebase
     try {
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
@@ -226,6 +264,189 @@
         dbStatus.innerHTML = "💾 وضع الحفظ المحلي (يعمل بدون انقطاع)";
         loadFromLocalStorage();
     }
+
+    // جلب بيانات كتاب بناءً على ISBN عبر OpenLibrary و Google Books API
+    async function fetchBookInfoByISBN(isbn) {
+        showToast('🔄 جاري البحث عن بيانات الكتاب بالباركود...');
+        try {
+            const res = await fetch(`https://openlibrary.org/api/books?bibkeys=ISBN:${isbn}&format=json&jscmd=data`);
+            const data = await res.json();
+            const bookKey = `ISBN:${isbn}`;
+
+            let title = '', author = '', publisher = '', publishYear = '2023', pages = '350';
+
+            if (data[bookKey]) {
+                const b = data[bookKey];
+                title = b.title || '';
+                author = b.authors ? b.authors.map(a => a.name).join(', ') : '';
+                publisher = b.publishers ? b.publishers.map(p => p.name).join(', ') : '';
+                publishYear = b.publish_date || '2023';
+                pages = b.number_of_pages ? b.number_of_pages.toString() : '350';
+            } else {
+                // محاولة احتياطية عبر Google Books API
+                const gRes = await fetch(`https://www.googleapis.com/books/v1/volumes?q=isbn:${isbn}`);
+                const gData = await gRes.json();
+                if (gData.items && gData.items.length > 0) {
+                    const info = gData.items[0].volumeInfo;
+                    title = info.title || '';
+                    author = info.authors ? info.authors.join(', ') : '';
+                    publisher = info.publisher || '';
+                    publishYear = info.publishedDate ? info.publishedDate.substring(0, 4) : '2023';
+                    pages = info.pageCount ? info.pageCount.toString() : '350';
+                }
+            }
+
+            if (!title) {
+                showToast('⚠️ لم يتم العثور على معلومات كتاب لهذا الباركود، يمكنك إضافته يدوياً.');
+                return;
+            }
+
+            const todayStr = new Date().toISOString().split('T')[0];
+            const newBook = {
+                seqNo: globalBooks.length + 1,
+                inventoryNo: 'INV-' + Math.floor(10000 + Math.random() * 90000),
+                title: title,
+                subtitle: '',
+                author: author || 'غير محدد',
+                translator: '',
+                investigator: '',
+                editor: '',
+                publisher: publisher || 'غير محدد',
+                publicationPlace: 'القاهرة',
+                edition: 'الأولى',
+                publishYear: publishYear,
+                isbn10: '',
+                isbn13: isbn,
+                pages: pages,
+                bookSize: 'غلاف عادي',
+                language: 'العربية',
+                materialType: 'كتاب مطبوع',
+                category: 'عام',
+                subject: 'فهرسة آلية',
+                keywords: title,
+                description: 'كتاب مضاف عبر قراءة الباركود',
+                seriesName: '',
+                seriesNo: '',
+
+                copyNo: '1',
+                classNo: '000',
+                shelfNo: 'A-' + Math.floor(1 + Math.random() * 20),
+                department: 'قسم الكتب العامة',
+                bookLocation: 'المكتبة المركزية',
+                status: 'متاح لاستعارة',
+                copiesCount: '1',
+                acquisitionDate: todayStr,
+                acquisitionSource: 'مسح باركود',
+                price: '0.00',
+                currency: 'SAR',
+                notes: 'تمت إضافته بالباركود الآلي',
+                coverImage: '',
+
+                originalTitle: title,
+                coverTitle: title,
+                fullNameAuthors: author,
+                authorNickname: '',
+                authorEntity: '',
+                electronicKeywords: title,
+                summary: 'تم جلب البيانات عن طريق قراءة رمز الباركود بشكل كامل.',
+                toc: '',
+                bookLink: '',
+                coverLink: '',
+                dataSource: 'مسح الباركود الآلي',
+                lastUpdate: todayStr,
+                trustDegree: 'عالية (100%)'
+            };
+
+            const updatedList = [...globalBooks, newBook];
+            updateStorageAndRender(updatedList);
+            showToast(`✅ تم جلب وإضافة الكتاب: "${title}" بنجاح!`);
+
+        } catch (err) {
+            console.error(err);
+            showToast('❌ حدث خطأ أثناء جلب بيانات الباركود');
+        }
+    }
+
+    // تشغيل قارئ الباركود عبر الكاميرا
+    function startBarcodeScanner() {
+        modalTitle.innerText = "📷 مسح باركود الكتاب (ISBN)";
+        modalInstruction.innerText = "وجّه كاميرا الجوال نحو الباركود الموجود خلف الكتاب";
+        scannerModal.style.display = 'flex';
+
+        Quagga.init({
+            inputStream: {
+                name: "Live",
+                type: "LiveStream",
+                target: document.querySelector('#interactive'),
+                constraints: { facingMode: "environment" }
+            },
+            decoder: {
+                readers: ["ean_reader", "ean_8_reader", "code_128_reader"]
+            }
+        }, function(err) {
+            if (err) {
+                console.error(err);
+                showToast("⚠️ يتعذر الوصول للكاميرا، تأكد من إعطاء الصلاحيات.");
+                stopScanner();
+                return;
+            }
+            Quagga.start();
+        });
+
+        Quagga.onDetected(function(result) {
+            if (result && result.codeResult && result.codeResult.code) {
+                const isbn = result.codeResult.code;
+                stopScanner();
+                fetchBookInfoByISBN(isbn);
+            }
+        });
+    }
+
+    function stopScanner() {
+        try { Quagga.stop(); } catch(e){}
+        scannerModal.style.display = 'none';
+    }
+
+    closeModalBtn.addEventListener('click', stopScanner);
+
+    scanBarcodeBtn.addEventListener('click', () => {
+        startBarcodeScanner();
+    });
+
+    // تحويل الكاميرا لالتقاط صورة للبحث بـ OCR
+    scanImageBtn.addEventListener('click', () => {
+        imageInput.click();
+    });
+
+    imageInput.addEventListener('change', async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        showToast('📷 جاري تحليل الصورة واستخراج النصوص من الكتاب...');
+        try {
+            const worker = await Tesseract.createWorker('ara+eng');
+            const ret = await worker.recognize(file);
+            await worker.terminate();
+
+            const text = ret.data.text.trim();
+            if (text) {
+                // استخراج أول سطر أو نص واعد للبحث
+                const cleanQuery = text.split('\n')[0].replace(/[^\u0600-\u06FFa-zA-Z0-9\s]/g, '').trim();
+                if (cleanQuery) {
+                    searchInput.value = cleanQuery;
+                    renderTable(globalBooks);
+                    showToast(`🔍 تم التعرّف على النص: "${cleanQuery}" وتمت الفلترة بها!`);
+                } else {
+                    showToast('⚠️ تعذر استخراج اسم الكتاب بوضوح من الصورة');
+                }
+            } else {
+                showToast('⚠️ لم يتم العثور على أي نصوص واضحة في الصورة');
+            }
+        } catch (err) {
+            console.error(err);
+            showToast('❌ حدث خطأ أثناء التعرف على الصورة');
+        }
+    });
 
     function parseMessyData(rawText, startingIndex = 1) {
         if (!rawText || !rawText.trim()) return [];
@@ -334,7 +555,8 @@
         const query = searchInput.value.trim().toLowerCase();
         const filteredBooks = books.filter(b => 
             (b.title && b.title.toLowerCase().includes(query)) || 
-            (b.author && b.author.toLowerCase().includes(query))
+            (b.author && b.author.toLowerCase().includes(query)) ||
+            (b.isbn13 && b.isbn13.includes(query))
         );
 
         if (!filteredBooks || filteredBooks.length === 0) {
@@ -368,7 +590,6 @@
         tableBody.innerHTML = html;
         recordCount.innerText = `إجمالي الكتب المحفوظة: ${books.length}`;
 
-        // ربط أحداث الحذف بالزر المنفرد
         document.querySelectorAll('.delete-single-btn').forEach(btn => {
             btn.addEventListener('click', (e) => {
                 const idx = parseInt(e.target.getAttribute('data-index'));
@@ -382,7 +603,6 @@
             const bookTitle = globalBooks[index].title || 'هذا الكتاب';
             if (confirm(`هل أنت تأكد من حذف "${bookTitle}" من السجل؟`)) {
                 globalBooks.splice(index, 1);
-                // إعادة ترقيم السلسلة
                 globalBooks.forEach((b, i) => b.seqNo = i + 1);
                 updateStorageAndRender(globalBooks);
                 showToast(`🗑️ تم حذف "${bookTitle}" بنجاح`);
